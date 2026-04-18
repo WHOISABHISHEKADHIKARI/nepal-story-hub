@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Nepal Story Hub"
+version = "1.0.0"
+id = "artifacts/nepal-story-hub"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25601
+
+[services.development]
+run = "pnpm --filter @workspace/nepal-story-hub run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nepal-story-hub", "run", "build" ]
+publicDir = "artifacts/nepal-story-hub/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25601"
+BASE_PATH = "/"

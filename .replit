@@ -26,3 +26,13 @@ externalPort = 8080
 [[ports]]
 localPort = 8081
 externalPort = 80
+
+[[ports]]
+localPort = 25601
+externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+VITE_SUPABASE_URL = "https://rhowtozzsdrrfbzrcpfz.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJob3d0b3p6c2RycmZienJjcGZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTE1MjIsImV4cCI6MjA5MjA4NzUyMn0.9EYrSQM6pWVHq9vyn95Zh1V-NEZH8-agODJqpvn-HpY"
