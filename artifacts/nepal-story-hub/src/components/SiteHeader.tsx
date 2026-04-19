@@ -48,12 +48,17 @@ export function SiteHeader() {
                 </Link>
               )}
               {isContributor && (
-                <Link to="/dashboard/new">
-                  <Button size="sm" className="gap-1.5">
-                    <PenLine className="h-3.5 w-3.5" />
-                    Write
-                  </Button>
-                </Link>
+                <>
+                  <Link to="/dashboard">
+                    <Button variant="ghost" size="sm">Dashboard</Button>
+                  </Link>
+                  <Link to="/dashboard/new">
+                    <Button size="sm" className="gap-1.5">
+                      <PenLine className="h-3.5 w-3.5" />
+                      Write
+                    </Button>
+                  </Link>
+                </>
               )}
               <Button variant="ghost" size="sm" onClick={signOut}>
                 Sign out
@@ -106,9 +111,14 @@ export function SiteHeader() {
                     </Link>
                   )}
                   {isContributor && (
-                    <Link to="/dashboard/new" onClick={() => setOpen(false)}>
-                      <Button size="sm" className="w-full">Write a story</Button>
-                    </Link>
+                    <>
+                      <Link to="/dashboard" onClick={() => setOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full">Dashboard</Button>
+                      </Link>
+                      <Link to="/dashboard/new" onClick={() => setOpen(false)}>
+                        <Button size="sm" className="w-full">Write a story</Button>
+                      </Link>
+                    </>
                   )}
                   <Button variant="ghost" size="sm" onClick={() => { signOut(); setOpen(false); }}>
                     Sign out

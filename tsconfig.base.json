@@ -19,7 +19,12 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "target": "es2022",
-    "types": [],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node"],
+    "composite": true,
+    "preserveSymlinks": true,
     "customConditions": ["workspace"]
   }
 }

@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import * as React from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { PublicLayout } from "@/components/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
+import { mcpApi } from "@/lib/api-mcp";
 
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
@@ -35,7 +36,7 @@ function BecomeContributor() {
     writing_samples: "",
   });
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
@@ -43,17 +44,24 @@ function BecomeContributor() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from("contributor_requests").insert({
-      ...parsed.data,
-      writing_samples: parsed.data.writing_samples || null,
-      user_id: user?.id ?? null,
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const res = await mcpApi.createAuthor({
+        project_id: 46,
+        name: parsed.data.full_name,
+        bio: parsed.data.bio,
+        description: parsed.data.motivation
+      });
+      
+      if (res.success) {
+        setSubmitted(true);
+      } else {
+        toast.error("Failed to submit request");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
     }
-    setSubmitted(true);
   };
 
   if (submitted) {

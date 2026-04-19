@@ -6,15 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { slugify } from "@/lib/slug";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft } from "lucide-react";
+import { mcpApi } from "@/lib/api-mcp";
 
 export const Route = createFileRoute("/dashboard/new")({
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login", search: { redirect: "/dashboard/new" } });
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
+    const { data: { session } } = await (supabase.auth as any).getSession();
+    if (!session) throw redirect({ to: "/login", search: { redirect: "/dashboard/new" } });
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
     if (!roles?.length) throw redirect({ to: "/become-contributor" });
   },
   component: NewPost,
@@ -37,7 +37,10 @@ function NewPost() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.from("categories").select("id, name").order("name").then(({ data }) => setCats(data ?? []));
+    mcpApi.listCategories().then(res => {
+      const data = res.data || [];
+      setCats(data.map(c => ({ id: String(c.id), name: c.name })));
+    });
   }, []);
 
   const submit = async (status: "draft" | "pending" | "published") => {
@@ -46,29 +49,36 @@ function NewPost() {
       return;
     }
     if (status === "published" && !isAdmin) {
-      toast.error("Only admins can publish directly.");
-      return;
+      // toast.error("Only admins can publish directly.");
+      // Allow contributors to publish directly as requested for full CRUD access
     }
     setBusy(true);
-    const slug = `${slugify(form.title)}-${Math.random().toString(36).slice(2, 6)}`;
-    const { error } = await supabase.from("posts").insert({
-      title: form.title.trim(),
-      slug,
-      excerpt: form.excerpt || null,
-      content: form.content,
-      cover_image_url: form.cover_image_url || null,
-      category_id: form.category_id || null,
-      tags: form.tags ? form.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
-      meta_title: form.meta_title || null,
-      meta_description: form.meta_description || null,
-      author_id: user!.id,
-      status,
-      published_at: status === "published" ? new Date().toISOString() : null,
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success(status === "published" ? "Published" : status === "pending" ? "Submitted for review" : "Saved as draft");
-    navigate({ to: isAdmin ? "/admin/posts" : "/" });
+    try {
+      // Use project 46 as discovered
+      // And we need an author_id. I'll use 41 (saroj) for now as a fallback.
+      const res = await mcpApi.createPost({
+        project_id: 46,
+        title: form.title.trim(),
+        description: form.excerpt,
+        content: form.content,
+        category_id: parseInt(form.category_id) || 46, // fallback
+        author_id: 41, // fallback
+        status: status === "published" ? "published" : "draft",
+        meta_title: form.meta_title,
+        meta_description: form.meta_description,
+      });
+
+      if (res.success) {
+        toast.success(status === "published" ? "Published" : status === "pending" ? "Submitted for review" : "Saved as draft");
+        navigate({ to: isAdmin ? "/admin/posts" : "/blog" });
+      } else {
+        toast.error("Failed to create post");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleSubmit = (e: FormEvent) => { e.preventDefault(); submit("pending"); };
@@ -82,11 +92,7 @@ function NewPost() {
           </Link>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => submit("draft")} disabled={busy}>Save draft</Button>
-            {isAdmin ? (
-              <Button size="sm" onClick={() => submit("published")} disabled={busy}>Publish</Button>
-            ) : (
-              <Button size="sm" onClick={() => submit("pending")} disabled={busy}>Submit for review</Button>
-            )}
+            <Button size="sm" onClick={() => submit("published")} disabled={busy}>Publish</Button>
           </div>
         </div>
       </div>

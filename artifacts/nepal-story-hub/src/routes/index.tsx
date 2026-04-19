@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { ArrowRight, PenLine, BookOpen, Users } from "lucide-react";
 import { PublicLayout } from "@/components/PublicLayout";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { PostCard, type PostListItem } from "@/components/PostCard";
+import { mcpApi } from "@/lib/api-mcp";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -16,15 +16,30 @@ function HomePage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("posts")
-        .select("id, slug, title, excerpt, cover_image_url, published_at, featured, category_id, author_id, categories(name, slug), profiles(display_name)")
-        .eq("status", "published")
-        .order("published_at", { ascending: false })
-        .limit(7);
-      const posts = (data ?? []) as unknown as PostListItem[];
-      setFeatured(posts.filter((p) => p.featured).slice(0, 3));
-      setRecent(posts.filter((p) => !p.featured).slice(0, 4));
+      try {
+        const postsRes = await mcpApi.listPosts();
+        const postsData = postsRes.data || [];
+        
+        const mappedPosts: PostListItem[] = postsData.map(p => ({
+          id: String(p.id),
+          slug: p.slug,
+          title: p.title,
+          excerpt: p.description,
+          cover_image_url: p.image_url,
+          published_at: p.published_at,
+          featured: false, // For now, since MCP doesn't have a featured flag
+          category_id: String(p.category.id),
+          author_id: String(p.author.id),
+          categories: { name: p.category.name, slug: p.category.slug },
+          profiles: { display_name: p.author.name }
+        }));
+
+        setRecent(mappedPosts.slice(0, 4));
+        // We'll just take the first few as featured for now
+        setFeatured(mappedPosts.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to fetch recent posts:", err);
+      }
     })();
   }, []);
 

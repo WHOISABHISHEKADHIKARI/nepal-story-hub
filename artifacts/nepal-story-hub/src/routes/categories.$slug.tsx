@@ -3,17 +3,18 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { PublicLayout } from "@/components/PublicLayout";
 import { PostCard, type PostListItem } from "@/components/PostCard";
-import { supabase } from "@/integrations/supabase/client";
+import { mcpApi } from "@/lib/api-mcp";
 
 export const Route = createFileRoute("/categories/$slug")({
-  loader: async ({ params }) => {
-    const { data: cat } = await supabase
-      .from("categories")
-      .select("id, name, slug, description")
-      .eq("slug", params.slug)
-      .maybeSingle();
-    if (!cat) throw notFound();
-    return { category: cat };
+  loader: async ({ params }: { params: { slug: string } }) => {
+    try {
+      const res = await mcpApi.listCategories();
+      const cat = res.data?.find(c => c.slug === params.slug);
+      if (!cat) throw notFound();
+      return { category: { ...cat, id: String(cat.id), description: null } };
+    } catch (err) {
+      throw notFound();
+    }
   },
   notFoundComponent: () => (
     <PublicLayout>
@@ -28,16 +29,37 @@ export const Route = createFileRoute("/categories/$slug")({
 function CategoryPage() {
   const { category } = Route.useLoaderData();
   const [posts, setPosts] = useState<PostListItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("posts")
-        .select("id, slug, title, excerpt, cover_image_url, published_at, featured, category_id, author_id, categories(name, slug), profiles(display_name)")
-        .eq("status", "published")
-        .eq("category_id", category.id)
-        .order("published_at", { ascending: false });
-      setPosts((data ?? []) as unknown as PostListItem[]);
+      setLoading(true);
+      try {
+        const res = await mcpApi.listPosts();
+        const data = res.data || [];
+        
+        const filtered = data
+          .filter(p => String(p.category.id) === category.id)
+          .map(p => ({
+            id: String(p.id),
+            slug: p.slug,
+            title: p.title,
+            excerpt: p.description,
+            cover_image_url: p.image_url,
+            published_at: p.published_at,
+            featured: false,
+            category_id: String(p.category.id),
+            author_id: String(p.author.id),
+            categories: { name: p.category.name, slug: p.category.slug },
+            profiles: { display_name: p.author.name }
+          }));
+        
+        setPosts(filtered);
+      } catch (err) {
+        console.error("Failed to load category posts:", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [category.id]);
 

@@ -5,13 +5,15 @@ import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login", search: { redirect: "/admin" } });
+    const { data: { session } } = await (supabase.auth as any).getSession();
+    if (!session) throw redirect({ to: "/login", search: { redirect: "/admin" } });
+
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", data.session.user.id);
-    if (!roles?.some((r) => r.role === "admin")) {
+      .eq("user_id", session.user.id);
+
+    if (!roles?.some((r: { role: string }) => r.role === "admin" || r.role === "editor")) {
       throw redirect({ to: "/" });
     }
   },

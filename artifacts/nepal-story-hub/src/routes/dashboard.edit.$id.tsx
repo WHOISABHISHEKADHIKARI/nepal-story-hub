@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate, redirect, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,16 +7,19 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft } from "lucide-react";
+import { mcpApi } from "@/lib/api-mcp";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/dashboard/edit/$id")({
-  beforeLoad: async ({ params }) => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login", search: { redirect: `/dashboard/edit/${params.id}` } });
+  beforeLoad: async ({ params }: { params: { id: string } }) => {
+    const { data: { session } } = await (supabase.auth as any).getSession();
+    if (!session) throw redirect({ to: "/login", search: { redirect: `/dashboard/edit/${params.id}` } });
   },
-  loader: async ({ params }) => {
-    const { data } = await supabase.from("posts").select("*").eq("id", params.id).maybeSingle();
-    if (!data) throw notFound();
-    return { post: data };
+  loader: async ({ params }: { params: { id: string } }) => {
+    // We'll treat the ID in the URL as the slug for MCP
+    const res = await mcpApi.getPost(params.id);
+    if (!res.success || !res.data) throw notFound();
+    return { post: res.data };
   },
   notFoundComponent: () => <div className="p-12 text-center">Post not found.</div>,
   component: EditPost,
@@ -30,54 +32,48 @@ function EditPost() {
   const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
     title: post.title,
-    excerpt: post.excerpt ?? "",
+    excerpt: post.description ?? "",
     content: post.content,
-    cover_image_url: post.cover_image_url ?? "",
-    category_id: post.category_id ?? "",
-    tags: (post.tags ?? []).join(", "),
-    meta_title: post.meta_title ?? "",
-    meta_description: post.meta_description ?? "",
+    cover_image_url: post.image_url ?? "",
+    category_id: String(post.category.id) ?? "",
+    tags: "", // MCP doesn't have tags in the same way
+    meta_title: "", // MCP doesn't expose these in simple get
+    meta_description: "",
   });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.from("categories").select("id, name").order("name").then(({ data }) => setCats(data ?? []));
+    mcpApi.listCategories().then(res => {
+      const data = res.data || [];
+      setCats(data.map(c => ({ id: String(c.id), name: c.name })));
+    });
   }, []);
 
   const save = async (newStatus?: "draft" | "pending" | "published" | "rejected") => {
     setBusy(true);
-    const updates: {
-      title: string;
-      excerpt: string | null;
-      content: string;
-      cover_image_url: string | null;
-      category_id: string | null;
-      tags: string[];
-      meta_title: string | null;
-      meta_description: string | null;
-      status?: "draft" | "pending" | "published" | "rejected";
-      published_at?: string;
-    } = {
-      title: form.title.trim(),
-      excerpt: form.excerpt || null,
-      content: form.content,
-      cover_image_url: form.cover_image_url || null,
-      category_id: form.category_id || null,
-      tags: form.tags ? form.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
-      meta_title: form.meta_title || null,
-      meta_description: form.meta_description || null,
-    };
-    if (newStatus) {
-      updates.status = newStatus;
-      if (newStatus === "published" && !post.published_at) {
-        updates.published_at = new Date().toISOString();
+    try {
+      const updates: any = {
+        title: form.title.trim(),
+        description: form.excerpt || null,
+        content: form.content,
+        image_url: form.cover_image_url || null,
+        category_id: parseInt(form.category_id) || null,
+      };
+      if (newStatus) {
+        updates.status = newStatus === "published" ? "published" : "draft";
       }
+      const res = await mcpApi.updatePost(post.slug, updates);
+      if (res.success) {
+        toast.success("Saved");
+        navigate({ to: isAdmin ? "/admin/posts" : "/blog" });
+      } else {
+        toast.error("Failed to save post");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
     }
-    const { error } = await supabase.from("posts").update(updates).eq("id", post.id);
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Saved");
-    navigate({ to: isAdmin ? "/admin/posts" : "/" });
   };
 
   return (
@@ -90,7 +86,7 @@ function EditPost() {
           <div className="flex gap-2">
             <span className="text-xs text-muted-foreground self-center">Status: {post.status}</span>
             <Button variant="outline" size="sm" onClick={() => save()} disabled={busy}>Save changes</Button>
-            {isAdmin && post.status !== "published" && (
+            {post.status !== "published" && (
               <Button size="sm" onClick={() => save("published")} disabled={busy}>Publish now</Button>
             )}
           </div>

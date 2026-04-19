@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { PublicLayout } from "@/components/PublicLayout";
 import { PostCard, type PostListItem } from "@/components/PostCard";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { mcpApi } from "@/lib/api-mcp";
 
 export const Route = createFileRoute("/blog")({
   component: BlogIndex,
@@ -20,17 +20,34 @@ function BlogIndex() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const cats = await supabase.from("categories").select("id, name, slug").order("name");
-      setCategories(cats.data ?? []);
-      let query = supabase
-        .from("posts")
-        .select("id, slug, title, excerpt, cover_image_url, published_at, featured, category_id, author_id, categories(name, slug), profiles(display_name)")
-        .eq("status", "published")
-        .order("published_at", { ascending: false });
-      if (activeCat) query = query.eq("category_id", activeCat);
-      const { data } = await query;
-      setPosts((data ?? []) as unknown as PostListItem[]);
-      setLoading(false);
+      try {
+        const catsRes = await mcpApi.listCategories();
+        const catsData = catsRes.data || [];
+        setCategories(catsData.map(c => ({ id: String(c.id), name: c.name, slug: c.slug })));
+
+        const postsRes = await mcpApi.listPosts();
+        const postsData = postsRes.data || [];
+        
+        const mappedPosts: PostListItem[] = postsData.map(p => ({
+          id: String(p.id),
+          slug: p.slug,
+          title: p.title,
+          excerpt: p.description,
+          cover_image_url: p.image_url,
+          published_at: p.published_at,
+          featured: false,
+          category_id: String(p.category.id),
+          author_id: String(p.author.id),
+          categories: { name: p.category.name, slug: p.category.slug },
+          profiles: { display_name: p.author.name }
+        }));
+
+        setPosts(mappedPosts);
+      } catch (err) {
+        console.error("Failed to fetch blog data:", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [activeCat]);
 

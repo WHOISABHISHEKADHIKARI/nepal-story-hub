@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { mcpApi } from "@/lib/api-mcp";
 
 interface PostRow {
   id: string;
@@ -26,28 +26,52 @@ function AdminPosts() {
   const [filter, setFilter] = useState<"all" | "draft" | "pending" | "published">("all");
 
   const load = useCallback(async () => {
-    let q = supabase
-      .from("posts")
-      .select("id, title, slug, status, featured, created_at, published_at, profiles(display_name), categories(name)")
-      .order("created_at", { ascending: false });
-    if (filter !== "all") q = q.eq("status", filter);
-    const { data } = await q;
-    setPosts((data ?? []) as unknown as PostRow[]);
+    try {
+      const res = await mcpApi.listPosts();
+      const data = res.data || [];
+      
+      let mapped: PostRow[] = data.map(p => ({
+        id: String(p.id),
+        title: p.title,
+        slug: p.slug,
+        status: p.status,
+        featured: false,
+        created_at: p.created_at,
+        published_at: p.published_at,
+        profiles: { display_name: p.author.name },
+        categories: { name: p.category.name }
+      }));
+
+      if (filter !== "all") {
+        mapped = mapped.filter(p => p.status === filter);
+      }
+      
+      setPosts(mapped);
+    } catch (err) {
+      console.error("Failed to load admin posts:", err);
+      toast.error("Failed to load posts");
+    }
   }, [filter]);
 
   useEffect(() => { load(); }, [load]);
 
   const toggleFeatured = async (id: string, featured: boolean) => {
-    const { error } = await supabase.from("posts").update({ featured: !featured }).eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success(featured ? "Unfeatured" : "Featured"); load(); }
+    toast.error("Featured status is not supported by the new API yet.");
   };
 
-  const remove = async (id: string) => {
+  const remove = async (slug: string) => {
     if (!confirm("Delete this post permanently?")) return;
-    const { error } = await supabase.from("posts").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Deleted"); load(); }
+    try {
+      const res = await mcpApi.deletePost(slug);
+      if (res.success) {
+        toast.success("Deleted");
+        load();
+      } else {
+        toast.error("Failed to delete");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   return (
@@ -108,8 +132,8 @@ function AdminPosts() {
                       {p.featured ? "Unfeature" : "Feature"}
                     </button>
                   )}
-                  <Link to="/dashboard/edit/$id" params={{ id: p.id }} className="text-xs text-primary hover:underline">Edit</Link>
-                  <button onClick={() => remove(p.id)} className="text-xs text-destructive hover:underline">Delete</button>
+                  <Link to="/dashboard/edit/$id" params={{ id: p.slug }} className="text-xs text-primary hover:underline">Edit</Link>
+                  <button onClick={() => remove(p.slug)} className="text-xs text-destructive hover:underline">Delete</button>
                 </td>
               </tr>
             ))}

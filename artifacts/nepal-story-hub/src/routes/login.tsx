@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import * as React from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { PublicLayout } from "@/components/PublicLayout";
 import { Button } from "@/components/ui/button";
@@ -14,18 +15,22 @@ const schema = z.object({
   displayName: z.string().trim().min(2).max(60).optional(),
 });
 
+const loginSearchSchema = z.object({
+  redirect: z.string().optional().catch("/"),
+});
+
 export const Route = createFileRoute("/login")({
-  validateSearch: (s) => ({ redirect: (s.redirect as string) || "/" }),
-  beforeLoad: async ({ search }) => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: search.redirect });
+  validateSearch: (s: Record<string, unknown>) => loginSearchSchema.parse(s),
+  beforeLoad: async ({ search }: { search: { redirect?: string } }) => {
+    const { data } = await (supabase.auth as any).getSession();
+    if (data.session) throw redirect({ to: search.redirect || "/" });
   },
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
-  const search = Route.useSearch();
+  const search = Route.useSearch() as { redirect?: string };
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +39,7 @@ function LoginPage() {
 
   const handleGoogle = async () => {
     setBusy(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await (supabase.auth as any).signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}${search.redirect !== "/" ? search.redirect : ""}`,
@@ -46,7 +51,7 @@ function LoginPage() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = schema.safeParse({ email, password, displayName: displayName || undefined });
     if (!parsed.success) {
@@ -56,7 +61,7 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { error } = await (supabase.auth as any).signUp({
           email,
           password,
           options: {
@@ -67,11 +72,11 @@ function LoginPage() {
         if (error) throw error;
         toast.success("Account created. Welcome.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await (supabase.auth as any).signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in.");
       }
-      navigate({ to: search.redirect });
+      navigate({ to: search.redirect || "/" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       toast.error(msg);

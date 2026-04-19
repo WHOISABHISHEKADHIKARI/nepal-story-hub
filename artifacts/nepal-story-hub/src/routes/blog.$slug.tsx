@@ -2,8 +2,8 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { PublicLayout } from "@/components/PublicLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { readingTime } from "@/lib/slug";
+import { mcpApi } from "@/lib/api-mcp";
 
 interface Post {
   id: string;
@@ -21,15 +21,32 @@ interface Post {
 }
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: async ({ params }) => {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("id, slug, title, excerpt, content, cover_image_url, published_at, meta_title, meta_description, tags, categories(name, slug), profiles(display_name, bio, avatar_url)")
-      .eq("slug", params.slug)
-      .eq("status", "published")
-      .maybeSingle();
-    if (error || !data) throw notFound();
-    return { post: data as unknown as Post };
+  loader: async ({ params }: { params: { slug: string } }) => {
+    try {
+      const res = await mcpApi.getPost(params.slug);
+      if (!res.success || !res.data) throw notFound();
+      
+      const p = res.data;
+      const mappedPost: Post = {
+        id: String(p.id),
+        slug: p.slug,
+        title: p.title,
+        excerpt: p.description,
+        content: p.content,
+        cover_image_url: p.image_url,
+        published_at: p.published_at,
+        meta_title: null,
+        meta_description: null,
+        tags: [],
+        categories: { name: p.category.name, slug: p.category.slug },
+        profiles: { display_name: p.author.name, bio: null, avatar_url: null }
+      };
+      
+      return { post: mappedPost };
+    } catch (err) {
+      console.error("Failed to load post:", err);
+      throw notFound();
+    }
   },
   notFoundComponent: () => (
     <PublicLayout>
@@ -42,7 +59,7 @@ export const Route = createFileRoute("/blog/$slug")({
       </div>
     </PublicLayout>
   ),
-  errorComponent: ({ error }) => (
+  errorComponent: ({ error }: { error: Error }) => (
     <PublicLayout>
       <div className="mx-auto max-w-2xl px-5 py-24 text-center">
         <h1 className="font-display text-4xl">Something went wrong</h1>

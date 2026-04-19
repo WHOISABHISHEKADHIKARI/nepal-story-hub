@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "blogapiservice": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "https://api.blogapiservice.com/mcp/mcp",
+        "-H", "Authorization: Bearer 4WH-su6gmBWlAuPp06MNeXecrVxWfjdSjM7D89vw0wk",
+        "-H", "Content-Type: application/json",
+        "-H", "Accept: application/json, text/event-stream"
+      ],
+      "env": {}
+    }
+  }
+}

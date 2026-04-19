@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PublicLayout } from "@/components/PublicLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { mcpApi } from "@/lib/api-mcp";
 
 export const Route = createFileRoute("/categories")({
   component: CategoriesIndex,
@@ -12,18 +12,19 @@ function CategoriesIndex() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("categories").select("id, name, slug, description").order("name");
-      const withCounts = await Promise.all(
-        (data ?? []).map(async (c) => {
-          const { count } = await supabase
-            .from("posts")
-            .select("id", { count: "exact", head: true })
-            .eq("category_id", c.id)
-            .eq("status", "published");
-          return { ...c, count: count ?? 0 };
-        }),
-      );
-      setCats(withCounts);
+      try {
+        const res = await mcpApi.listCategories();
+        const data = res.data || [];
+        setCats(data.map(c => ({
+          id: String(c.id),
+          name: c.name,
+          slug: c.slug,
+          description: null, // MCP doesn't have description in the simple list
+          count: 0 // We don't have counts easily available in MCP list
+        })));
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
     })();
   }, []);
 

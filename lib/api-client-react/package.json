@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@tanstack/query-core": "5.90.20",
     "@tanstack/react-query": "catalog:"
   },
   "peerDependencies": {

@@ -11,6 +11,15 @@
     },
     {
       "path": "./lib/api-zod"
+    },
+    {
+      "path": "./scripts"
+    },
+    {
+      "path": "./artifacts/api-server"
+    },
+    {
+      "path": "./artifacts/nepal-story-hub"
     }
   ]
 }

@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { mcpApi } from "@/lib/api-mcp";
 
 interface ReviewPost {
   id: string;
@@ -29,39 +29,51 @@ function ReviewQueue() {
   const [notes, setNotes] = useState("");
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("posts")
-      .select("id, title, slug, excerpt, content, cover_image_url, created_at, reviewer_notes, profiles(display_name), categories(name)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-    setPosts((data ?? []) as unknown as ReviewPost[]);
+    try {
+      const res = await mcpApi.listPosts();
+      const data = res.data || [];
+      const pending = data
+        .filter((p: any) => p.status === "draft")
+        .map((p: any) => ({
+          id: String(p.id),
+          title: p.title,
+          slug: p.slug,
+          excerpt: p.description,
+          content: p.content,
+          cover_image_url: p.image_url,
+          created_at: p.created_at,
+          reviewer_notes: null,
+          profiles: { display_name: p.author.name },
+          categories: { name: p.category.name }
+        }));
+      setPosts(pending);
+    } catch (err) {
+      console.error("Failed to load review queue:", err);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const approve = async (id: string) => {
-    const { error } = await supabase
-      .from("posts")
-      .update({ status: "published", published_at: new Date().toISOString(), reviewer_notes: notes || null })
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Published");
-    setSelected(null);
-    setNotes("");
-    load();
+  const approve = async (slug: string) => {
+    try {
+      const res = await mcpApi.publishPost(slug);
+      if (res.success) {
+        toast.success("Published");
+        setSelected(null);
+        setNotes("");
+        load();
+      } else {
+        toast.error("Failed to publish");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
-  const reject = async (id: string) => {
-    if (!notes.trim()) return toast.error("Please add feedback notes for the writer.");
-    const { error } = await supabase
-      .from("posts")
-      .update({ status: "rejected", reviewer_notes: notes })
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Sent back to writer");
+  const reject = async (_slug: string) => {
+    toast.error("Rejection with feedback is not supported in MCP yet. Post remains in draft.");
     setSelected(null);
     setNotes("");
-    load();
   };
 
   return (
@@ -102,10 +114,10 @@ function ReviewQueue() {
               <label className="text-xs uppercase tracking-wider text-muted-foreground">Feedback to writer (required to reject)</label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1.5" placeholder="What needs work, or what made it great…" />
             </div>
-            <div className="flex gap-3 mt-5">
-              <Button onClick={() => approve(selected.id)}>Approve & publish</Button>
-              <Button variant="outline" onClick={() => reject(selected.id)}>Send back</Button>
-            </div>
+            <div className="flex gap-2">
+                <Button onClick={() => approve(selected.slug)}>Approve & publish</Button>
+                <Button variant="outline" onClick={() => reject(selected.slug)}>Send feedback</Button>
+              </div>
           </div>
         ) : (
           <div className="border border-dashed border-border rounded-lg p-12 text-center text-muted-foreground italic font-serif">

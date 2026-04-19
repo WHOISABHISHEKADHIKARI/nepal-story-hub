@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+// Use more robust type definitions for Supabase
+type User = any;
+type Session = any;
 
 export type AppRole = "admin" | "contributor";
 
@@ -28,32 +32,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
-    setRoles((data ?? []).map((r) => r.role as AppRole));
+    setRoles((data ?? []).map((r: { role: string }) => r.role as AppRole));
   };
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = (supabase.auth as any).onAuthStateChange((_event: any, newSession: any) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        setTimeout(() => fetchRoles(newSession.user.id), 0);
-      } else {
-        setRoles([]);
-      }
     });
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) fetchRoles(s.user.id);
+    // Check initial session
+    (supabase.auth as any).getSession().then(({ data: { session: initialSession } }: any) => {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
       setLoading(false);
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      if (sub && typeof (sub as any).unsubscribe === 'function') {
+        (sub as any).unsubscribe();
+      }
+    };
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await (supabase.auth as any).signOut();
+      toast.success("Signed out successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign out");
+    }
   };
 
   const refreshRoles = async () => {

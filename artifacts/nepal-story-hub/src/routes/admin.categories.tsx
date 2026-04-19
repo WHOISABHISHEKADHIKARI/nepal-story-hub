@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { slugify } from "@/lib/slug";
+import { mcpApi } from "@/lib/api-mcp";
 
 interface Cat { id: string; name: string; slug: string; description: string | null; }
 
@@ -20,27 +20,48 @@ function AdminCategories() {
   const [desc, setDesc] = useState("");
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from("categories").select("*").order("name");
-    setCats(data ?? []);
+    try {
+      const res = await mcpApi.listCategories();
+      const data = res.data || [];
+      setCats(data.map(c => ({ id: String(c.id), name: c.name, slug: c.slug, description: null })));
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   const add = async () => {
     if (!name.trim()) return;
-    const slug = slugify(name);
-    const { error } = await supabase.from("categories").insert({ name: name.trim(), slug, description: desc || null });
-    if (error) return toast.error(error.message);
-    setName(""); setDesc("");
-    toast.success("Added");
-    load();
+    try {
+      // We need a project_id. I'll use 46 as discovered earlier or 18.
+      // Since project 46 was more recent, let's use it.
+      const res = await mcpApi.createCategory({ name: name.trim(), project_id: 46 });
+      if (res.success) {
+        setName(""); setDesc("");
+        toast.success("Added");
+        load();
+      } else {
+        toast.error("Failed to add category");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
-  const remove = async (id: string) => {
+  const remove = async (slug: string) => {
     if (!confirm("Delete this category?")) return;
-    const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    load();
+    try {
+      const res = await mcpApi.deleteCategory(slug);
+      if (res.success) {
+        toast.success("Deleted");
+        load();
+      } else {
+        toast.error("Failed to delete category");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   return (
@@ -74,7 +95,7 @@ function AdminCategories() {
                 <td className="p-3 font-medium">{c.name}</td>
                 <td className="p-3 text-muted-foreground font-mono text-xs">{c.slug}</td>
                 <td className="p-3 text-right">
-                  <button onClick={() => remove(c.id)} className="text-xs text-destructive hover:underline">Delete</button>
+                  <button onClick={() => remove(c.slug)} className="text-xs text-destructive hover:underline">Delete</button>
                 </td>
               </tr>
             ))}
