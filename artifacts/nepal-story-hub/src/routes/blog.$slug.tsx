@@ -25,7 +25,7 @@ export const Route = createFileRoute("/blog/$slug")({
     try {
       const res = await mcpApi.getPost(params.slug);
       if (!res.success || !res.data) throw notFound();
-      
+
       const p = res.data;
       const mappedPost: Post = {
         id: String(p.id),
@@ -39,9 +39,9 @@ export const Route = createFileRoute("/blog/$slug")({
         meta_description: null,
         tags: [],
         categories: { name: p.category.name, slug: p.category.slug },
-        profiles: { display_name: p.author.name, bio: null, avatar_url: null }
+        profiles: { display_name: p.author.name, bio: null, avatar_url: null },
       };
-      
+
       return { post: mappedPost };
     } catch (err) {
       console.error("Failed to load post:", err);
@@ -52,9 +52,9 @@ export const Route = createFileRoute("/blog/$slug")({
     <PublicLayout>
       <div className="mx-auto max-w-2xl px-5 py-24 text-center">
         <h1 className="font-display text-4xl">Story not found</h1>
-        <p className="mt-3 text-muted-foreground font-serif">It may have been moved or unpublished.</p>
-        <Link to="/blog" className="inline-block mt-6 text-primary hover:underline">
-          ← Back to all stories
+        <p className="mt-3 font-serif text-muted-foreground">It may have been moved or unpublished.</p>
+        <Link to="/blog" className="mt-6 inline-block text-primary hover:underline">
+          Back to all stories
         </Link>
       </div>
     </PublicLayout>
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/blog/$slug")({
     <PublicLayout>
       <div className="mx-auto max-w-2xl px-5 py-24 text-center">
         <h1 className="font-display text-4xl">Something went wrong</h1>
-        <p className="mt-3 text-muted-foreground font-serif">{error.message}</p>
+        <p className="mt-3 font-serif text-muted-foreground">{error.message}</p>
       </div>
     </PublicLayout>
   ),
@@ -76,8 +76,8 @@ function PostPage() {
 
   return (
     <PublicLayout>
-      <article className="mx-auto max-w-3xl px-5 pt-10 pb-20">
-        <Link to="/blog" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-8">
+      <article className="page-shell max-w-4xl pt-10 pb-20">
+        <Link to="/blog" className="mb-8 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-3.5 w-3.5" /> All stories
         </Link>
 
@@ -85,23 +85,23 @@ function PostPage() {
           <Link
             to="/categories/$slug"
             params={{ slug: post.categories.slug }}
-            className="text-xs uppercase tracking-[0.2em] text-primary font-semibold"
+            className="section-kicker"
           >
             {post.categories.name}
           </Link>
         )}
 
-        <h1 className="font-display text-4xl md:text-6xl mt-3 leading-[1.08] text-balance">
+        <h1 className="mt-3 font-display text-4xl leading-[1.08] text-balance md:text-6xl">
           {post.title}
         </h1>
 
         {post.excerpt && (
-          <p className="mt-5 text-xl font-serif italic text-muted-foreground leading-relaxed">
+          <p className="mt-5 font-serif text-xl italic leading-relaxed text-muted-foreground">
             {post.excerpt}
           </p>
         )}
 
-        <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground border-y border-border/60 py-4">
+        <div className="mt-7 flex items-center gap-3 border-y border-border/60 py-4 text-sm text-muted-foreground">
           {post.profiles?.avatar_url ? (
             <img
               src={post.profiles.avatar_url}
@@ -109,7 +109,7 @@ function PostPage() {
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-display text-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-display text-lg text-primary">
               {post.profiles?.display_name?.[0] ?? "?"}
             </div>
           )}
@@ -117,7 +117,7 @@ function PostPage() {
             <div className="font-medium text-foreground">{post.profiles?.display_name ?? "Unknown writer"}</div>
             <div className="text-xs">
               {post.published_at && format(new Date(post.published_at), "MMMM d, yyyy")}
-              <span className="mx-2">·</span>
+              <span className="mx-2">/</span>
               {minutes} min read
             </div>
           </div>
@@ -127,7 +127,7 @@ function PostPage() {
           <img
             src={post.cover_image_url}
             alt={post.title}
-            className="mt-8 w-full rounded-md"
+            className="mt-8 w-full rounded-[1.25rem] shadow-[0_24px_60px_-40px_rgba(40,24,16,0.42)]"
             loading="eager"
           />
         )}
@@ -140,7 +140,7 @@ function PostPage() {
         {post.tags && post.tags.length > 0 && (
           <div className="mt-12 flex flex-wrap gap-2">
             {post.tags.map((t: string) => (
-              <span key={t} className="text-xs uppercase tracking-wider px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+              <span key={t} className="rounded-full bg-muted px-2.5 py-1 text-xs uppercase tracking-wider text-muted-foreground">
                 {t}
               </span>
             ))}
@@ -148,10 +148,10 @@ function PostPage() {
         )}
 
         {post.profiles?.bio && (
-          <div className="mt-14 p-6 bg-paper border border-border/60 rounded-lg">
+          <div className="mt-14 rounded-lg border border-border/60 bg-paper p-6">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">About the writer</div>
-            <div className="font-display text-xl mt-1.5">{post.profiles.display_name}</div>
-            <p className="mt-2 text-sm text-muted-foreground font-serif leading-relaxed">{post.profiles.bio}</p>
+            <div className="mt-1.5 font-display text-xl">{post.profiles.display_name}</div>
+            <p className="mt-2 font-serif text-sm leading-relaxed text-muted-foreground">{post.profiles.bio}</p>
           </div>
         )}
       </article>

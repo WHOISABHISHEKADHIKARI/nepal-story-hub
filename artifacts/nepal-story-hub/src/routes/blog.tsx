@@ -23,12 +23,12 @@ function BlogIndex() {
       try {
         const catsRes = await mcpApi.listCategories();
         const catsData = catsRes.data || [];
-        setCategories(catsData.map(c => ({ id: String(c.id), name: c.name, slug: c.slug })));
+        setCategories(catsData.map((c) => ({ id: String(c.id), name: c.name, slug: c.slug })));
 
         const postsRes = await mcpApi.listPosts();
         const postsData = postsRes.data || [];
-        
-        const mappedPosts: PostListItem[] = postsData.map(p => ({
+
+        const mappedPosts: PostListItem[] = postsData.map((p) => ({
           id: String(p.id),
           slug: p.slug,
           title: p.title,
@@ -39,7 +39,7 @@ function BlogIndex() {
           category_id: String(p.category.id),
           author_id: String(p.author.id),
           categories: { name: p.category.name, slug: p.category.slug },
-          profiles: { display_name: p.author.name }
+          profiles: { display_name: p.author.name },
         }));
 
         setPosts(mappedPosts);
@@ -49,69 +49,71 @@ function BlogIndex() {
         setLoading(false);
       }
     })();
-  }, [activeCat]);
+  }, []);
 
-  const filtered = q
-    ? posts.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q.toLowerCase()) ||
-          p.excerpt?.toLowerCase().includes(q.toLowerCase()),
-      )
-    : posts;
+  const filtered = posts.filter((p) => {
+    const matchesCategory = activeCat ? p.category_id === activeCat : true;
+    const query = q.trim().toLowerCase();
+    const matchesQuery = query
+      ? p.title.toLowerCase().includes(query) || p.excerpt?.toLowerCase().includes(query)
+      : true;
+    return matchesCategory && matchesQuery;
+  });
 
   return (
     <PublicLayout>
-      <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
-        <div className="mb-10">
-          <span className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Stories</span>
-          <h1 className="font-display text-4xl md:text-5xl mt-2">Every story we've published.</h1>
+      <div className="page-shell section-space">
+        <div className="mb-10 max-w-3xl">
+          <span className="section-kicker">Stories</span>
+          <h1 className="mt-3 font-display text-4xl md:text-6xl">Every story we have published.</h1>
+          <p className="mt-4 font-serif text-lg leading-8 text-muted-foreground">
+            Browse the full archive like a travel magazine: by place, by mood, or by the question you brought with you.
+          </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-10 items-stretch md:items-center">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search stories…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-10 bg-background"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setActiveCat(null)}
-              className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-full border transition-colors ${
-                activeCat === null
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              All
-            </button>
-            {categories.map((c) => (
+        <div className="editorial-panel mb-10 rounded-[1.75rem] p-5 md:p-6">
+          <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center">
+            <div className="relative flex-1 md:max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search stories..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="field-shell h-12 rounded-full border-0 bg-transparent pl-10 pr-4 shadow-none"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
               <button
-                key={c.id}
-                onClick={() => setActiveCat(c.id)}
-                className={`px-3 py-1.5 text-xs uppercase tracking-wider rounded-full border transition-colors ${
-                  activeCat === c.id
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={() => setActiveCat(null)}
+                className="pill-filter"
+                data-active={activeCat === null}
               >
-                {c.name}
+                All
               </button>
-            ))}
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveCat(c.id)}
+                  className="pill-filter"
+                  data-active={activeCat === c.id}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {loading ? (
-          <p className="text-muted-foreground italic font-serif">Loading…</p>
+          <div className="editorial-panel rounded-[1.5rem] px-6 py-12 text-center">
+            <p className="font-serif italic text-muted-foreground">Loading...</p>
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="border border-dashed border-border rounded-lg p-12 text-center">
-            <p className="text-muted-foreground font-serif italic">No stories yet in this section.</p>
+          <div className="editorial-panel rounded-[1.5rem] px-6 py-12 text-center">
+            <p className="font-serif italic text-muted-foreground">No stories match this section yet.</p>
           </div>
         ) : (
-          <div className="grid gap-12 md:grid-cols-2">
+          <div className="grid gap-7 md:grid-cols-2">
             {filtered.map((p) => (
               <PostCard key={p.id} post={p} />
             ))}

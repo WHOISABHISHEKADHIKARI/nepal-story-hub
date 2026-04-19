@@ -1,10 +1,10 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import healthRouter from "./health";
 import postsRouter from "./posts";
 import categoriesRouter from "./categories";
 import authorsRouter from "./authors";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.use(healthRouter);
 router.use("/posts", postsRouter);

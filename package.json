@@ -7,9 +7,9 @@
     "dev:api": "pnpm --filter @workspace/api-server run dev",
     "dev:web": "pnpm --filter @workspace/nepal-story-hub run dev",
     "preinstall": "npx only-allow pnpm",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build": "pnpm run typecheck && pnpm -r --filter @workspace/api-server --filter @workspace/nepal-story-hub --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter @workspace/api-server --filter @workspace/nepal-story-hub --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
   "devDependencies": {

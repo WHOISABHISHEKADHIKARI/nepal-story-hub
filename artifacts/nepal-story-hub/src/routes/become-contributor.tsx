@@ -49,9 +49,9 @@ function BecomeContributor() {
         project_id: 46,
         name: parsed.data.full_name,
         bio: parsed.data.bio,
-        description: parsed.data.motivation
+        description: parsed.data.motivation,
       });
-      
+
       if (res.success) {
         setSubmitted(true);
       } else {
@@ -68,10 +68,10 @@ function BecomeContributor() {
     return (
       <PublicLayout>
         <div className="mx-auto max-w-lg px-5 py-24 text-center">
-          <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
-          <h1 className="font-display text-3xl mt-4">Thank you.</h1>
-          <p className="mt-3 text-muted-foreground font-serif">
-            We'll review your application and get back to you by email. In the meantime,
+          <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+          <h1 className="mt-4 font-display text-3xl">Thank you.</h1>
+          <p className="mt-3 font-serif text-muted-foreground">
+            We&apos;ll review your application and get back to you by email. In the meantime,
             read a few stories to get a feel for our voice.
           </p>
         </div>
@@ -81,38 +81,38 @@ function BecomeContributor() {
 
   return (
     <PublicLayout>
-      <div className="mx-auto max-w-2xl px-5 py-16">
-        <span className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Join us</span>
-        <h1 className="font-display text-4xl md:text-5xl mt-2 leading-tight">Become a contributor</h1>
-        <p className="mt-4 text-muted-foreground font-serif text-lg">
-          Tell us who you are and what you'd like to write. We respond to every application.
+      <div className="page-shell section-space max-w-4xl">
+        <span className="section-kicker">Join us</span>
+        <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">Become a contributor</h1>
+        <p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-muted-foreground">
+          Tell us who you are and what you&apos;d like to write. We respond to every application.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-10 space-y-5 bg-card border border-border/60 rounded-lg p-6 md:p-8">
+        <form onSubmit={handleSubmit} className="editorial-panel mt-10 space-y-5 rounded-[2rem] p-6 md:p-8">
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <Label htmlFor="name">Full name</Label>
-              <Input id="name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required maxLength={100} />
+              <Input id="name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required maxLength={100} className="field-shell mt-2 h-12 rounded-xl border-0 shadow-none" />
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required maxLength={255} />
+              <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required maxLength={255} className="field-shell mt-2 h-12 rounded-xl border-0 shadow-none" />
             </div>
           </div>
           <div>
             <Label htmlFor="bio">A little about you</Label>
-            <Textarea id="bio" rows={4} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} required maxLength={2000} placeholder="Where you're from, what you do, what draws you to writing." />
+            <Textarea id="bio" rows={4} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} required maxLength={2000} placeholder="Where you&apos;re from, what you do, what draws you to writing." className="field-shell mt-2 min-h-32 rounded-[1.1rem] border-0 shadow-none" />
           </div>
           <div>
             <Label htmlFor="mot">What would you like to write about?</Label>
-            <Textarea id="mot" rows={4} value={form.motivation} onChange={(e) => setForm({ ...form, motivation: e.target.value })} required maxLength={2000} placeholder="A specific topic, beat, or ongoing series you have in mind." />
+            <Textarea id="mot" rows={4} value={form.motivation} onChange={(e) => setForm({ ...form, motivation: e.target.value })} required maxLength={2000} placeholder="A specific topic, beat, or ongoing series you have in mind." className="field-shell mt-2 min-h-32 rounded-[1.1rem] border-0 shadow-none" />
           </div>
           <div>
             <Label htmlFor="samples">Writing samples (optional)</Label>
-            <Textarea id="samples" rows={3} value={form.writing_samples} onChange={(e) => setForm({ ...form, writing_samples: e.target.value })} maxLength={5000} placeholder="Links to published work or a short excerpt." />
+            <Textarea id="samples" rows={3} value={form.writing_samples} onChange={(e) => setForm({ ...form, writing_samples: e.target.value })} maxLength={5000} placeholder="Links to published work or a short excerpt." className="field-shell mt-2 min-h-28 rounded-[1.1rem] border-0 shadow-none" />
           </div>
-          <Button type="submit" disabled={busy} size="lg" className="w-full">
-            {busy ? "Submitting…" : "Submit application"}
+          <Button type="submit" disabled={busy} size="lg" className="w-full rounded-full">
+            {busy ? "Submitting..." : "Submit application"}
           </Button>
         </form>
       </div>

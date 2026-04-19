@@ -29,10 +29,10 @@ export function PostCard({
     <Link
       to="/blog/$slug"
       params={{ slug: post.slug }}
-      className="group block"
+      className="group editorial-panel card-lift block rounded-[1.5rem] p-4 md:p-5"
     >
       {post.cover_image_url && !isCompact && (
-        <div className={`overflow-hidden rounded-md mb-4 bg-muted ${isFeatured ? "aspect-[4/3]" : "aspect-[16/10]"}`}>
+        <div className={`mb-5 overflow-hidden rounded-[1.1rem] bg-muted ${isFeatured ? "aspect-[4/3]" : "aspect-[16/10]"}`}>
           <img
             src={post.cover_image_url}
             alt={post.title}
@@ -42,25 +42,25 @@ export function PostCard({
         </div>
       )}
       {post.categories && (
-        <span className="text-xs uppercase tracking-[0.15em] text-primary font-semibold">
+        <span className="section-kicker !gap-0 !text-[0.65rem] !tracking-[0.18em]">
           {post.categories.name}
         </span>
       )}
-      <h3 className={`font-display mt-1.5 leading-tight text-balance group-hover:text-primary transition-colors ${
-        isFeatured ? "text-xl md:text-2xl" : "text-2xl md:text-3xl"
+      <h3 className={`font-display mt-1.5 leading-tight text-balance transition-colors group-hover:text-primary ${
+        isFeatured ? "text-2xl md:text-[2rem]" : "text-[1.75rem] md:text-[2.15rem]"
       }`}>
         {post.title}
       </h3>
       {post.excerpt && !isCompact && (
-        <p className="mt-2.5 text-muted-foreground font-serif leading-relaxed line-clamp-2">
+        <p className="mt-3 line-clamp-3 font-serif text-base leading-7 text-muted-foreground">
           {post.excerpt}
         </p>
       )}
-      <div className="mt-3 text-xs text-muted-foreground">
+      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-[0.14em] text-muted-foreground">
         {post.profiles?.display_name && <span>By {post.profiles.display_name}</span>}
         {post.published_at && (
           <>
-            <span className="mx-2">·</span>
+            <span>/</span>
             <time>{format(new Date(post.published_at), "MMM d, yyyy")}</time>
           </>
         )}

@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Hamro Katha — Editorial design inspired by Nepal's warmth and heritage
- * Crimson red (flag), golden saffron accents, warm cream paper
+ * Hamro Katha - editorial design inspired by Nepal's warmth and heritage.
+ * Crimson red, saffron accents, and warm paper tones support a travel magazine feel.
  */
 
 @theme {
@@ -54,14 +54,19 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    min-width: 0;
   }
 
   html {
+    scroll-behavior: smooth;
     font-feature-settings: "ss01", "kern";
   }
 
   body {
-    background-color: var(--color-background);
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 32rem),
+      linear-gradient(180deg, color-mix(in srgb, var(--color-paper) 88%, white 12%), var(--color-background) 36%, var(--color-paper) 100%);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -69,14 +74,36 @@
     font-feature-settings: "kern", "liga";
   }
 
+  #root {
+    min-height: 100vh;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  a {
+    transition:
+      color 0.2s ease,
+      opacity 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.015em;
     font-weight: 600;
   }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 18%, white);
+    color: var(--color-foreground);
+  }
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -95,14 +122,12 @@
   background-color: color-mix(in srgb, var(--color-muted-foreground) 30%, transparent);
 }
 
-/* Glassmorphism */
 .glass {
   background-color: color-mix(in srgb, var(--color-background) 80%, transparent);
   backdrop-filter: blur(12px);
   border: 1px solid color-mix(in srgb, white 20%, transparent);
 }
 
-/* Blog Post Typography — PROSE EDITORIAL */
 .prose-editorial {
   font-family: var(--font-serif);
   font-size: 1.125rem;
@@ -151,9 +176,10 @@
 }
 
 .prose-editorial img {
-  border-radius: 0.5rem;
+  width: 100%;
+  border-radius: 1rem;
   margin: 2rem auto;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 24px 60px -40px rgba(40, 24, 16, 0.45);
 }
 
 .prose-editorial ul, .prose-editorial ol {
@@ -186,5 +212,117 @@
 
   .text-ink {
     color: var(--color-ink);
+  }
+
+  .page-shell {
+    width: min(100% - 2rem, 76rem);
+    margin-inline: auto;
+  }
+
+  .section-space {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .editorial-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, white 18%);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, white 72%, var(--color-paper) 28%), color-mix(in srgb, white 35%, var(--color-paper) 65%));
+    box-shadow:
+      0 20px 70px -52px rgba(53, 32, 18, 0.48),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .editorial-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 30%),
+      radial-gradient(circle at bottom right, color-mix(in srgb, var(--color-primary) 9%, transparent), transparent 28%);
+  }
+
+  .card-lift {
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .card-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 60px -42px rgba(43, 26, 18, 0.35);
+    border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+  }
+
+  .section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  .section-kicker::before {
+    content: "";
+    width: 2.5rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.5;
+  }
+
+  .soft-grid {
+    background-image:
+      linear-gradient(to right, rgba(107, 82, 56, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(107, 82, 56, 0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .pill-filter {
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--color-border) 84%, white 16%);
+    background: color-mix(in srgb, white 82%, var(--color-paper) 18%);
+    padding: 0.55rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .pill-filter:hover {
+    transform: translateY(-1px);
+    color: var(--color-foreground);
+    border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  }
+
+  .pill-filter[data-active="true"] {
+    color: var(--color-primary-foreground);
+    background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 78%, black 22%));
+    border-color: transparent;
+    box-shadow: 0 16px 32px -24px rgba(118, 30, 44, 0.7);
+  }
+
+  .field-shell {
+    border-radius: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-border) 80%, white 20%);
+    background: color-mix(in srgb, white 80%, var(--color-paper) 20%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  @media (max-width: 640px) {
+    .page-shell {
+      width: min(100% - 1.25rem, 76rem);
+    }
   }
 }

@@ -19,23 +19,22 @@ function HomePage() {
       try {
         const postsRes = await mcpApi.listPosts();
         const postsData = postsRes.data || [];
-        
-        const mappedPosts: PostListItem[] = postsData.map(p => ({
+
+        const mappedPosts: PostListItem[] = postsData.map((p) => ({
           id: String(p.id),
           slug: p.slug,
           title: p.title,
           excerpt: p.description,
           cover_image_url: p.image_url,
           published_at: p.published_at,
-          featured: false, // For now, since MCP doesn't have a featured flag
+          featured: false,
           category_id: String(p.category.id),
           author_id: String(p.author.id),
           categories: { name: p.category.name, slug: p.category.slug },
-          profiles: { display_name: p.author.name }
+          profiles: { display_name: p.author.name },
         }));
 
         setRecent(mappedPosts.slice(0, 4));
-        // We'll just take the first few as featured for now
         setFeatured(mappedPosts.slice(0, 3));
       } catch (err) {
         console.error("Failed to fetch recent posts:", err);
@@ -45,46 +44,57 @@ function HomePage() {
 
   return (
     <PublicLayout>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary/8 via-background to-background">
-        <div className="relative mx-auto max-w-5xl px-5 pt-20 pb-28 md:pt-32 md:pb-36">
-          <span className="inline-block text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-5">
-            A publication from Nepal
-          </span>
-          <h1 className="font-display text-5xl md:text-7xl leading-[1.05] text-balance text-foreground max-w-3xl">
-            The stories that shape{" "}
-            <em className="text-primary not-italic font-display">our home.</em>
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl font-serif leading-relaxed">
-            From mountain villages to Kathmandu's alleys — independent journalism,
-            travel writing, and cultural essays by Nepali voices and friends of Nepal.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/blog">
-              <Button size="lg" className="gap-2">
-                Read latest stories <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/become-contributor">
-              <Button size="lg" variant="outline" className="gap-2">
-                <PenLine className="h-4 w-4" /> Become a contributor
-              </Button>
-            </Link>
+      <section className="section-space relative overflow-hidden">
+        <div className="soft-grid absolute inset-0 opacity-40" />
+        <div className="page-shell relative grid items-end gap-10 lg:grid-cols-[minmax(0,1.2fr)_22rem]">
+          <div className="editorial-panel rounded-[2rem] px-6 py-10 sm:px-8 sm:py-12 md:px-12 md:py-16">
+            <span className="section-kicker mb-5">
+              A publication from Nepal
+            </span>
+            <h1 className="max-w-4xl font-display text-5xl leading-[0.98] text-balance text-foreground md:text-7xl">
+              Travel stories with the patience of a magazine and the soul of the road.
+            </h1>
+            <p className="mt-6 max-w-2xl font-serif text-lg leading-8 text-muted-foreground md:text-xl">
+              From mountain villages to Kathmandu&apos;s alleys - independent journalism,
+              travel writing, and cultural essays by Nepali voices and friends of Nepal.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/blog">
+                <Button size="lg" className="gap-2 rounded-full px-6 shadow-sm">
+                  Read latest stories <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/become-contributor">
+                <Button size="lg" variant="outline" className="gap-2 rounded-full bg-white/50 px-6">
+                  <PenLine className="h-4 w-4" /> Become a contributor
+                </Button>
+              </Link>
+            </div>
           </div>
+
+          <aside className="editorial-panel rounded-[1.75rem] p-6 sm:p-7">
+            <span className="section-kicker mb-5">Why readers stay</span>
+            <div className="space-y-5">
+              <Stat icon={<BookOpen className="h-5 w-5" />} label="Longform pacing" value="Deep reads" />
+              <Stat icon={<Users className="h-5 w-5" />} label="Local voices" value="Grounded reporting" />
+            </div>
+          </aside>
         </div>
       </section>
 
-      {/* Featured */}
       {featured.length > 0 && (
-        <section className="mx-auto max-w-6xl px-5 mt-2">
-          <div className="bg-card border border-border/60 rounded-lg p-6 md:p-10 shadow-sm">
-            <div className="flex items-baseline justify-between mb-6">
-              <h2 className="font-display text-2xl md:text-3xl">Featured</h2>
-              <Link to="/blog" className="text-sm text-primary hover:underline">
-                All stories →
+        <section className="section-space pt-0">
+          <div className="page-shell">
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <div>
+                <span className="section-kicker">Editor&apos;s picks</span>
+                <h2 className="mt-3 font-display text-3xl md:text-4xl">Featured stories</h2>
+              </div>
+              <Link to="/blog" className="text-sm font-medium text-primary hover:opacity-80">
+                All stories -&gt;
               </Link>
             </div>
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               {featured.map((p) => (
                 <PostCard key={p.id} post={p} variant="featured" />
               ))}
@@ -93,48 +103,54 @@ function HomePage() {
         </section>
       )}
 
-      {/* Recent */}
-      <section className="mx-auto max-w-6xl px-5 mt-20">
-        <div className="flex items-baseline justify-between mb-8">
-          <h2 className="font-display text-3xl">Recent stories</h2>
-          <Link to="/blog" className="text-sm text-primary hover:underline">
-            Browse all →
-          </Link>
-        </div>
-        {recent.length > 0 ? (
-          <div className="grid gap-10 md:grid-cols-2">
-            {recent.map((p) => (
-              <PostCard key={p.id} post={p} />
-            ))}
-          </div>
-        ) : (
-          <div className="border border-dashed border-border rounded-lg p-12 text-center">
-            <p className="text-muted-foreground font-serif italic">
-              No stories published yet. Sign in as the admin to create the first one,
-              or invite contributors.
-            </p>
-          </div>
-        )}
-      </section>
-
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-5 mt-24">
-        <div className="rounded-xl bg-paper border border-border/60 px-6 md:px-12 py-12 md:py-16 grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <h2 className="font-display text-3xl md:text-4xl text-balance">
-              Have a story Nepal needs to hear?
-            </h2>
-            <p className="mt-4 text-muted-foreground font-serif text-lg leading-relaxed">
-              We're building a home for honest, well-told stories about Nepal. If you
-              write — apply to join. Every voice strengthens the chorus.
-            </p>
-            <Link to="/become-contributor" className="inline-block mt-6">
-              <Button size="lg">Apply to write</Button>
+      <section className="section-space pt-0">
+        <div className="page-shell">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <span className="section-kicker">Fresh from the desk</span>
+              <h2 className="mt-3 font-display text-3xl md:text-4xl">Recent stories</h2>
+            </div>
+            <Link to="/blog" className="text-sm font-medium text-primary hover:opacity-80">
+              Browse all -&gt;
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <Stat icon={<BookOpen className="h-5 w-5" />} label="Published stories" value="Growing" />
-            <Stat icon={<Users className="h-5 w-5" />} label="Contributors" value="Welcoming" />
+          {recent.length > 0 ? (
+            <div className="grid gap-7 md:grid-cols-2">
+              {recent.map((p) => (
+                <PostCard key={p.id} post={p} />
+              ))}
+            </div>
+          ) : (
+            <div className="editorial-panel rounded-[1.5rem] px-6 py-12 text-center md:px-10">
+              <p className="font-serif italic text-muted-foreground">
+                No stories published yet. Sign in as the admin to create the first one,
+                or invite contributors.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="section-space pt-0">
+        <div className="page-shell">
+          <div className="editorial-panel grid items-center gap-10 rounded-[2rem] px-6 py-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:px-12 md:py-14">
+            <div>
+              <span className="section-kicker">Join the publication</span>
+              <h2 className="mt-3 font-display text-3xl text-balance md:text-5xl">
+                Have a story Nepal needs to hear?
+              </h2>
+              <p className="mt-4 font-serif text-lg leading-8 text-muted-foreground">
+                We are building a home for honest, well-told stories about Nepal. If you
+                write, apply to join. Every voice strengthens the chorus.
+              </p>
+              <Link to="/become-contributor" className="mt-7 inline-block">
+                <Button size="lg" className="rounded-full px-6">Apply to write</Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Stat icon={<BookOpen className="h-5 w-5" />} label="Published stories" value="Growing" />
+              <Stat icon={<Users className="h-5 w-5" />} label="Contributors" value="Welcoming" />
+            </div>
           </div>
         </div>
       </section>
@@ -144,10 +160,10 @@ function HomePage() {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-card rounded-lg border border-border/60 p-5">
-      <div className="text-primary mb-2">{icon}</div>
-      <div className="font-display text-2xl">{value}</div>
-      <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{label}</div>
+    <div className="rounded-[1.25rem] border border-border/60 bg-white/65 p-5 backdrop-blur-sm">
+      <div className="mb-3 text-primary">{icon}</div>
+      <div className="font-display text-2xl leading-tight">{value}</div>
+      <div className="mt-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
     </div>
   );
 }
