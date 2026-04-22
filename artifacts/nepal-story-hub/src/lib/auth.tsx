@@ -6,6 +6,11 @@ type User = any;
 type Session = any;
 
 export type AppRole = "admin" | "contributor";
+const SUPER_ADMIN_EMAILS = new Set(
+  ["abhishekadikari1254@gmail.com"]
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
 
 interface AuthContextValue {
   user: User | null;
@@ -33,6 +38,10 @@ function normalizeRoles(user: User | null): AppRole[] {
   const normalized = candidates
     .map((value) => String(value).toLowerCase())
     .filter((value): value is AppRole => value === "admin" || value === "contributor");
+
+  if (SUPER_ADMIN_EMAILS.has(String(user.email ?? "").trim().toLowerCase())) {
+    normalized.push("admin");
+  }
 
   return Array.from(new Set(normalized));
 }

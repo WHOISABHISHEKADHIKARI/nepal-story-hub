@@ -3,6 +3,12 @@ import { LayoutDashboard, FileText, Users, FolderTree, Inbox, LogOut, PenLine, N
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
+const SUPER_ADMIN_EMAILS = new Set(
+  ["abhishekadikari1254@gmail.com"]
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
     const { data: { session } } = await (supabase.auth as any).getSession();
@@ -17,7 +23,10 @@ export const Route = createFileRoute("/admin")({
       const normalized = String(role).toLowerCase();
       return normalized === "admin" || normalized === "editor";
     });
-    if (!isAdmin) {
+    const isSuperAdmin = SUPER_ADMIN_EMAILS.has(
+      String(session.user.email ?? "").trim().toLowerCase(),
+    );
+    if (!isAdmin && !isSuperAdmin) {
       throw redirect({ to: "/" });
     }
   },
