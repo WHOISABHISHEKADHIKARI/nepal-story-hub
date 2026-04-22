@@ -1,0 +1,6 @@
+THEME.zip
+THEME_EXTRACTED
+.codex-*.png
+.agents
+*.log
+*.err
