@@ -49,6 +49,42 @@ function LoginPage() {
   React.useEffect(() => {
     let cancelled = false;
 
+    const exchangeOAuthCode = async () => {
+      const currentUrl = new URL(window.location.href);
+      const code = currentUrl.searchParams.get("code");
+
+      if (!code) return;
+
+      setBusy(true);
+      const { error } = await (supabase.auth as any).exchangeCodeForSession(code);
+
+      if (cancelled) return;
+
+      if (error) {
+        toast.error(error.message ?? "Google sign-in failed");
+        setBusy(false);
+        return;
+      }
+
+      // Remove OAuth query params before redirecting.
+      currentUrl.searchParams.delete("code");
+      currentUrl.searchParams.delete("state");
+      window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
+
+      toast.success("Signed in with Google.");
+      void navigate({ to: redirectPath });
+    };
+
+    void exchangeOAuthCode();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, redirectPath]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
     const loadAuthSettings = async () => {
       try {
         const res = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
@@ -86,11 +122,12 @@ function LoginPage() {
     }
 
     setBusy(true);
-    const redirectTo = new URL(redirectPath, window.location.origin).toString();
+    const callbackUrl = new URL("/login", window.location.origin);
+    callbackUrl.searchParams.set("redirect", redirectPath);
     const { error } = await (supabase.auth as any).signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo,
+        redirectTo: callbackUrl.toString(),
       },
     });
     if (error) {
@@ -219,30 +256,25 @@ function LoginPage() {
               </button>
             </div>
             <div className="space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-2 rounded-full bg-white/55"
-                onClick={handleGoogle}
-                disabled={busy || providerLoading || !googleEnabled}
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
-                  <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.4 14.6 2.5 12 2.5 6.8 2.5 2.6 6.7 2.6 12s4.2 9.5 9.4 9.5c5.4 0 9-3.8 9-9.2 0-.6-.1-1.1-.2-1.6H12z"/>
-                </svg>
-                {providerLoading
-                  ? "Checking Google sign-in"
-                  : googleEnabled
-                    ? "Continue with Google"
-                    : "Google sign-in unavailable"}
-              </Button>
-              {!providerLoading && !googleEnabled && (
-                <div className="rounded-[1rem] border border-border/60 bg-white/45 px-4 py-3 text-sm leading-7 text-muted-foreground">
-                  Google OAuth is disabled in this Supabase project right now. Use email and password, or enable Google in the Supabase Auth providers panel.
-                </div>
+              {(providerLoading || googleEnabled) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 rounded-full bg-white/55"
+                  onClick={handleGoogle}
+                  disabled={busy || providerLoading}
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
+                    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.4 14.6 2.5 12 2.5 6.8 2.5 2.6 6.7 2.6 12s4.2 9.5 9.4 9.5c5.4 0 9-3.8 9-9.2 0-.6-.1-1.1-.2-1.6H12z"/>
+                  </svg>
+                  {providerLoading ? "Checking Google sign-in" : "Continue with Google"}
+                </Button>
               )}
               <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
-                <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">or with email</span>
+                <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  {googleEnabled ? "or with email" : "continue with email"}
+                </span>
                 <div className="h-px flex-1 bg-border" />
               </div>
             </div>
