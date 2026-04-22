@@ -1,6 +1,8 @@
-import { Outlet, createRootRoute, Link } from "@tanstack/react-router";
+import { Outlet, createRootRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -31,6 +33,36 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const exchangeOAuthCode = async () => {
+      const currentUrl = new URL(window.location.href);
+      const code = currentUrl.searchParams.get("code");
+      if (!code) return;
+
+      const { error } = await (supabase.auth as any).exchangeCodeForSession(code);
+      if (cancelled || error) return;
+
+      currentUrl.searchParams.delete("code");
+      currentUrl.searchParams.delete("state");
+      window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
+
+      // If callback lands on root, finish by routing to login page
+      // so app-level redirect rules remain consistent.
+      if (currentUrl.pathname === "/") {
+        void navigate({ to: "/login" });
+      }
+    };
+
+    void exchangeOAuthCode();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
   return (
     <AuthProvider>
       <Outlet />
