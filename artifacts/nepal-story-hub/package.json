@@ -77,6 +77,7 @@
   },
   "dependencies": {
     "@radix-ui/react-primitive": "^2.1.4",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.48.1",
     "@tanstack/query-core": "5.90.20",
     "@tanstack/react-router": "^1.168.22"

@@ -3,7 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string
   readonly VITE_SUPABASE_PUBLISHABLE_KEY: string
-  // more env variables...
+  readonly BASE_PATH?: string
+  readonly PORT?: string
 }
 
 interface ImportMeta {

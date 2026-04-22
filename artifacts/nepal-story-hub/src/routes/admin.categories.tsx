@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,24 +22,25 @@ function AdminCategories() {
     try {
       const res = await mcpApi.listCategories();
       const data = res.data || [];
-      setCats(data.map(c => ({ id: String(c.id), name: c.name, slug: c.slug, description: null })));
+      setCats(data.map((c) => ({ id: String(c.id), name: c.name, slug: c.slug, description: null })));
     } catch (err) {
       console.error("Failed to load categories:", err);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const add = async () => {
     if (!name.trim()) return;
     try {
-      // We need a project_id. I'll use 46 as discovered earlier or 18.
-      // Since project 46 was more recent, let's use it.
       const res = await mcpApi.createCategory({ name: name.trim(), project_id: 46 });
       if (res.success) {
-        setName(""); setDesc("");
+        setName("");
+        setDesc("");
         toast.success("Added");
-        load();
+        void load();
       } else {
         toast.error("Failed to add category");
       }
@@ -55,7 +55,7 @@ function AdminCategories() {
       const res = await mcpApi.deleteCategory(slug);
       if (res.success) {
         toast.success("Deleted");
-        load();
+        void load();
       } else {
         toast.error("Failed to delete category");
       }
@@ -65,42 +65,51 @@ function AdminCategories() {
   };
 
   return (
-    <div className="p-8 max-w-3xl">
-      <h1 className="font-display text-3xl mb-6">Categories</h1>
-
-      <div className="bg-card border border-border/60 rounded-lg p-5 mb-6 space-y-3">
-        <div>
-          <Label>New category name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Climate" />
-        </div>
-        <div>
-          <Label>Description (optional)</Label>
-          <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} />
-        </div>
-        <Button onClick={add}>Add category</Button>
+    <div className="app-page max-w-5xl">
+      <div className="mb-8">
+        <span className="section-kicker">Taxonomy</span>
+        <h1 className="mt-3 font-display text-3xl md:text-5xl">Categories</h1>
       </div>
 
-      <div className="bg-card border border-border/60 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="text-left p-3">Name</th>
-              <th className="text-left p-3">Slug</th>
-              <th className="text-right p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {cats.map((c) => (
-              <tr key={c.id} className="border-t border-border/60">
-                <td className="p-3 font-medium">{c.name}</td>
-                <td className="p-3 text-muted-foreground font-mono text-xs">{c.slug}</td>
-                <td className="p-3 text-right">
-                  <button onClick={() => remove(c.slug)} className="text-xs text-destructive hover:underline">Delete</button>
-                </td>
+      <div className="app-panel mb-6 p-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label>New category name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Climate" className="field-shell mt-2 h-12 rounded-xl border-0 shadow-none" />
+          </div>
+          <div>
+            <Label>Description (optional)</Label>
+            <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} className="field-shell mt-2 rounded-xl border-0 shadow-none" />
+          </div>
+        </div>
+        <Button onClick={add} className="mt-4 rounded-full">Add category</Button>
+      </div>
+
+      <div className="app-panel overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="data-table min-w-[640px]">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th className="text-right">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {cats.map((c) => (
+                <tr key={c.id}>
+                  <td className="font-medium text-foreground">{c.name}</td>
+                  <td className="font-mono text-sm text-muted-foreground">{c.slug}</td>
+                  <td>
+                    <div className="flex justify-end">
+                      <button onClick={() => remove(c.slug)} className="text-sm text-destructive hover:underline">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

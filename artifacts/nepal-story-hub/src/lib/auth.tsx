@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Use more robust type definitions for Supabase
 type User = any;
 type Session = any;
 
@@ -21,35 +20,49 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function normalizeRoles(user: User | null): AppRole[] {
+  if (!user) return [];
+
+  const candidates = [
+    user.app_metadata?.roles,
+    user.user_metadata?.roles,
+    user.app_metadata?.role,
+    user.user_metadata?.role,
+  ].flatMap((value: unknown) => Array.isArray(value) ? value : value ? [value] : []);
+
+  const normalized = candidates
+    .map((value) => String(value).toLowerCase())
+    .filter((value): value is AppRole => value === "admin" || value === "contributor");
+
+  return Array.from(new Set(normalized));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRoles = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    setRoles((data ?? []).map((r: { role: string }) => r.role as AppRole));
-  };
-
   useEffect(() => {
-    const { data: sub } = (supabase.auth as any).onAuthStateChange((_event: any, newSession: any) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-    });
-
-    // Check initial session
-    (supabase.auth as any).getSession().then(({ data: { session: initialSession } }: any) => {
+    const boot = async () => {
+      const { data: { session: initialSession } } = await (supabase.auth as any).getSession();
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
+      setRoles(normalizeRoles(initialSession?.user ?? null));
+      setLoading(false);
+    };
+
+    void boot();
+
+    const { data: sub } = (supabase.auth as any).onAuthStateChange(async (_event: any, newSession: any) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      setRoles(normalizeRoles(newSession?.user ?? null));
       setLoading(false);
     });
 
     return () => {
-      if (sub && typeof (sub as any).unsubscribe === 'function') {
+      if (sub && typeof (sub as any).unsubscribe === "function") {
         (sub as any).unsubscribe();
       }
     };
@@ -58,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await (supabase.auth as any).signOut();
+      setRoles([]);
       toast.success("Signed out successfully");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
@@ -65,7 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshRoles = async () => {
-    if (user) await fetchRoles(user.id);
+    const { data: { session: currentSession } } = await (supabase.auth as any).getSession();
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+    setRoles(normalizeRoles(currentSession?.user ?? null));
   };
 
   const value: AuthContextValue = {
@@ -74,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     loading,
     isAdmin: roles.includes("admin"),
-    isContributor: roles.includes("contributor") || roles.includes("admin"),
+    isContributor: !!user,
     signOut,
     refreshRoles,
   };

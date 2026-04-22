@@ -44,15 +44,18 @@ function ReviewQueue() {
           created_at: p.created_at,
           reviewer_notes: null,
           profiles: { display_name: p.author.name },
-          categories: { name: p.category.name }
+          categories: { name: p.category.name },
         }));
       setPosts(pending);
+      setSelected((current) => current ? pending.find((item) => item.id === current.id) ?? pending[0] ?? null : pending[0] ?? null);
     } catch (err) {
       console.error("Failed to load review queue:", err);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const approve = async (slug: string) => {
     try {
@@ -61,7 +64,7 @@ function ReviewQueue() {
         toast.success("Published");
         setSelected(null);
         setNotes("");
-        load();
+        void load();
       } else {
         toast.error("Failed to publish");
       }
@@ -71,60 +74,63 @@ function ReviewQueue() {
   };
 
   const reject = async (_slug: string) => {
-    toast.error("Rejection with feedback is not supported in MCP yet. Post remains in draft.");
+    toast.error("Rejection with feedback is not supported in the current API yet.");
     setSelected(null);
     setNotes("");
   };
 
   return (
-    <div className="p-8 grid lg:grid-cols-[300px_1fr] gap-8">
-      <div>
-        <h1 className="font-display text-2xl mb-4">Review queue</h1>
+    <div className="app-page grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <section className="app-panel p-5">
+        <div className="mb-4">
+          <span className="section-kicker">Review queue</span>
+          <h1 className="mt-3 font-display text-2xl">Drafts awaiting a decision</h1>
+        </div>
         <div className="space-y-2">
-          {posts.length === 0 && <p className="text-sm text-muted-foreground italic">Inbox zero. ✨</p>}
+          {posts.length === 0 && <p className="font-serif italic text-muted-foreground">Inbox zero.</p>}
           {posts.map((p) => (
             <button
               key={p.id}
               onClick={() => { setSelected(p); setNotes(p.reviewer_notes ?? ""); }}
-              className={`w-full text-left p-3 rounded-md border transition-colors ${
-                selected?.id === p.id ? "border-primary bg-primary/5" : "border-border/60 bg-card hover:bg-muted/50"
+              className={`w-full rounded-2xl border p-4 text-left transition-colors ${
+                selected?.id === p.id ? "border-primary/40 bg-primary/6" : "border-border/60 bg-white/35 hover:bg-white/55"
               }`}
             >
-              <div className="font-medium text-sm line-clamp-2">{p.title}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {p.profiles?.display_name} · {format(new Date(p.created_at), "MMM d")}
+              <div className="font-medium text-foreground line-clamp-2">{p.title}</div>
+              <div className="mt-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                {p.profiles?.display_name} / {format(new Date(p.created_at), "MMM d")}
               </div>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div>
+      <section>
         {selected ? (
-          <div className="bg-card border border-border/60 rounded-lg p-6 md:p-8">
-            <div className="text-xs uppercase tracking-wider text-primary font-semibold">{selected.categories?.name}</div>
-            <h2 className="font-display text-3xl mt-2">{selected.title}</h2>
-            <div className="text-sm text-muted-foreground mt-1">By {selected.profiles?.display_name}</div>
-            {selected.excerpt && <p className="mt-4 italic font-serif text-muted-foreground">{selected.excerpt}</p>}
-            {selected.cover_image_url && <img src={selected.cover_image_url} alt="" className="mt-4 rounded-md w-full max-h-72 object-cover" />}
-            <div className="prose-editorial mt-6 max-h-96 overflow-auto p-4 bg-paper rounded border border-border/60">
-              <div dangerouslySetInnerHTML={{ __html: /<\/?[a-z]/i.test(selected.content) ? selected.content : selected.content.split(/\n{2,}/).map(p => `<p>${p.replace(/</g, "&lt;")}</p>`).join("") }} />
+          <div className="app-panel p-6 md:p-8">
+            <div className="section-kicker">{selected.categories?.name ?? "Uncategorized"}</div>
+            <h2 className="mt-3 font-display text-3xl md:text-4xl">{selected.title}</h2>
+            <div className="mt-2 text-sm text-muted-foreground">By {selected.profiles?.display_name}</div>
+            {selected.excerpt && <p className="mt-4 font-serif italic text-muted-foreground">{selected.excerpt}</p>}
+            {selected.cover_image_url && <img src={selected.cover_image_url} alt="" className="mt-5 h-72 w-full rounded-[1.25rem] object-cover" />}
+            <div className="prose-editorial mt-6 max-h-[28rem] overflow-auto rounded-[1.25rem] border border-border/60 bg-white/45 p-5">
+              <div dangerouslySetInnerHTML={{ __html: /<\/?[a-z]/i.test(selected.content) ? selected.content : selected.content.split(/\n{2,}/).map((p) => `<p>${p.replace(/</g, "&lt;")}</p>`).join("") }} />
             </div>
             <div className="mt-6">
-              <label className="text-xs uppercase tracking-wider text-muted-foreground">Feedback to writer (required to reject)</label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1.5" placeholder="What needs work, or what made it great…" />
+              <label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Feedback to writer</label>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} className="field-shell mt-2 rounded-[1.1rem] border-0 shadow-none" placeholder="What needs work, or what made it great..." />
             </div>
-            <div className="flex gap-2">
-                <Button onClick={() => approve(selected.slug)}>Approve & publish</Button>
-                <Button variant="outline" onClick={() => reject(selected.slug)}>Send feedback</Button>
-              </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button onClick={() => approve(selected.slug)} className="rounded-full">Approve and publish</Button>
+              <Button variant="outline" onClick={() => reject(selected.slug)} className="rounded-full bg-white/50">Send feedback</Button>
+            </div>
           </div>
         ) : (
-          <div className="border border-dashed border-border rounded-lg p-12 text-center text-muted-foreground italic font-serif">
+          <div className="app-panel px-6 py-14 text-center font-serif italic text-muted-foreground">
             Select a post to review.
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

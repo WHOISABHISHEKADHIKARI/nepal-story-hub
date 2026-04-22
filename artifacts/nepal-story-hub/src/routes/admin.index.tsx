@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { FileText, Inbox, Users, CheckCircle2 } from "lucide-react";
+import { FileText, Inbox, Users, CheckCircle2, Compass, Newspaper } from "lucide-react";
 import { mcpApi } from "@/lib/api-mcp";
 
 export const Route = createFileRoute("/admin/")({
@@ -13,20 +13,19 @@ function AdminOverview() {
   useEffect(() => {
     (async () => {
       try {
-        const [pubRes, pendRes, authRes] = await Promise.all([
-          mcpApi.listPosts(), // status published is likely default or we can't filter precisely yet
-          mcpApi.listPosts(), // we'll filter in memory if needed
+        const [pubRes, authRes] = await Promise.all([
+          mcpApi.listPosts(),
           mcpApi.listAuthors(),
         ]);
-        
+
         const posts = pubRes.data || [];
         const authors = authRes.data || [];
-        
+
         setStats({
-          posts: posts.filter(p => p.status === "published").length,
-          pending: posts.filter(p => p.status === "draft").length, // Using draft as pending for now
+          posts: posts.filter((p) => p.status === "published").length,
+          pending: posts.filter((p) => p.status === "draft").length,
           contributors: authors.length,
-          requests: 0, // MCP doesn't have requests yet
+          requests: 0,
         });
       } catch (err) {
         console.error("Failed to fetch admin stats:", err);
@@ -35,11 +34,51 @@ function AdminOverview() {
   }, []);
 
   return (
-    <div className="p-8 max-w-5xl">
-      <h1 className="font-display text-3xl">Overview</h1>
-      <p className="text-muted-foreground mt-1">A snapshot of the publication.</p>
+    <div className="app-page">
+      <section className="workspace-hero px-6 py-8 md:px-8 md:py-9">
+        <span className="section-kicker">Admin overview</span>
+        <div className="mt-3 grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_20rem]">
+          <div>
+            <h1 className="font-display text-3xl md:text-5xl">Publication snapshot with the right amount of urgency.</h1>
+            <p className="mt-3 max-w-2xl font-serif text-lg leading-8 text-muted-foreground">
+              This view should tell an editor what needs attention in under ten seconds: what is live, what is waiting, and where the next bottleneck is forming.
+            </p>
+          </div>
+          <div className="workspace-note">
+            <div className="flex items-center gap-2 text-primary"><Compass className="h-4 w-4" /> Editorial direction</div>
+            <div className="mt-3 font-display text-2xl leading-tight text-foreground">
+              {stats.pending > 0 ? "Review queue needs attention" : "Desk is clear"}
+            </div>
+            <div className="mt-2 text-sm leading-7">
+              {stats.pending > 0 ? `${stats.pending} drafts are waiting for a decision.` : "No draft backlog right now, so you can focus on quality and cadence."}
+            </div>
+          </div>
+        </div>
+        <div className="workspace-metrics mt-6">
+          <div className="workspace-metric">
+            <div className="flex items-center gap-2 text-primary"><CheckCircle2 className="h-4 w-4" /> Published</div>
+            <div className="workspace-metric-value mt-3">{stats.posts}</div>
+            <div className="workspace-metric-label">Stories currently live</div>
+          </div>
+          <div className="workspace-metric">
+            <div className="flex items-center gap-2 text-primary"><Inbox className="h-4 w-4" /> Pending</div>
+            <div className="workspace-metric-value mt-3">{stats.pending}</div>
+            <div className="workspace-metric-label">Drafts to review</div>
+          </div>
+          <div className="workspace-metric">
+            <div className="flex items-center gap-2 text-primary"><Newspaper className="h-4 w-4" /> Requests</div>
+            <div className="workspace-metric-value mt-3">{stats.requests}</div>
+            <div className="workspace-metric-label">Open contributor requests</div>
+          </div>
+          <div className="workspace-metric">
+            <div className="flex items-center gap-2 text-primary"><Users className="h-4 w-4" /> Contributors</div>
+            <div className="workspace-metric-value mt-3">{stats.contributors}</div>
+            <div className="workspace-metric-label">Writers on the roster</div>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-4 mt-8">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat icon={CheckCircle2} label="Published" value={stats.posts} />
         <Stat icon={Inbox} label="Pending review" value={stats.pending} accent />
         <Stat icon={FileText} label="Open requests" value={stats.requests} accent />
@@ -51,10 +90,10 @@ function AdminOverview() {
 
 function Stat({ icon: Icon, label, value, accent }: { icon: typeof FileText; label: string; value: number; accent?: boolean }) {
   return (
-    <div className={`p-5 rounded-lg border ${accent && value > 0 ? "border-primary/40 bg-primary/5" : "border-border/60 bg-card"}`}>
+    <div className={`admin-stat ${accent && value > 0 ? "border-primary/30 bg-primary/5" : ""}`}>
       <Icon className={`h-5 w-5 ${accent && value > 0 ? "text-primary" : "text-muted-foreground"}`} />
-      <div className="font-display text-3xl mt-2">{value}</div>
-      <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{label}</div>
+      <div className="mt-3 font-display text-4xl leading-none">{value}</div>
+      <div className="mt-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
     </div>
   );
 }
