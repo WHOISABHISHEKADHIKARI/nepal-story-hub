@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { callMcpTool, DEFAULT_PROJECT_SLUG } from "./_lib/mcp";
+import { callMcpTool, DEFAULT_PROJECT_SLUG } from "./_lib/mcp.js";
 
 type Req = IncomingMessage & {
   query?: Record<string, string | string[]>;
