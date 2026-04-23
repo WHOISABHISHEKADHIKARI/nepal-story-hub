@@ -70,7 +70,7 @@ async function getSessionId() {
   const response = await fetch(MCP_URL, {
     method: "POST",
     headers: {
-      Authorization: AUTH_TOKEN,
+      Authorization: AUTH_TOKEN!,
       "Content-Type": "application/json",
       Accept: "application/json, text/event-stream",
     },

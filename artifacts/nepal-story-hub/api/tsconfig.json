@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "include": ["./**/*.ts"],
+  "compilerOptions": {
+    "composite": false,
+    "lib": ["es2022", "dom"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "outDir": "../.vercel/output/functions"
+  }
+}
