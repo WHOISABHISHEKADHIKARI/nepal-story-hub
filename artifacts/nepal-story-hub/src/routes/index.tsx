@@ -45,23 +45,19 @@ function HomePage() {
   return (
     <PublicLayout>
       <section className="section-space relative overflow-hidden">
-        <div className="soft-grid absolute inset-0 opacity-40" />
-        <div className="page-shell relative grid items-end gap-10 lg:grid-cols-[minmax(0,1.2fr)_22rem]">
-          <div className="editorial-panel rounded-[2rem] px-6 py-10 sm:px-8 sm:py-12 md:px-12 md:py-16">
-            <span className="section-kicker mb-5">
-              A publication from Nepal
-            </span>
+        <div className="page-shell relative masthead-grid">
+          <div className="lead-story">
+            <span className="section-kicker mb-5">A publication from Nepal</span>
             <h1 className="max-w-4xl font-display text-5xl leading-[0.98] text-balance text-foreground md:text-7xl">
-              Travel stories with the patience of a magazine and the soul of the road.
+              Thoughtful stories for readers who prefer depth over travel noise.
             </h1>
             <p className="mt-6 max-w-2xl font-serif text-lg leading-8 text-muted-foreground md:text-xl">
-              From mountain villages to Kathmandu&apos;s alleys - independent journalism,
-              travel writing, and cultural essays by Nepali voices and friends of Nepal.
+              Hamro Katha publishes reported essays, dispatches, and travel writing from Nepal with the restraint, pacing, and curiosity of a strong magazine.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/blog">
                 <Button size="lg" className="gap-2 rounded-full px-6 shadow-sm">
-                  Read latest stories <ArrowRight className="h-4 w-4" />
+                  Start reading <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/become-contributor">
@@ -72,12 +68,27 @@ function HomePage() {
             </div>
           </div>
 
-          <aside className="editorial-panel rounded-[1.75rem] p-6 sm:p-7">
+          <aside className="side-ledger">
             <span className="section-kicker mb-5">Why readers stay</span>
             <div className="space-y-5">
               <Stat icon={<BookOpen className="h-5 w-5" />} label="Longform pacing" value="Deep reads" />
               <Stat icon={<Users className="h-5 w-5" />} label="Local voices" value="Grounded reporting" />
             </div>
+            {recent[0] && (
+              <div className="mt-8 border-t border-border/60 pt-5">
+                <div className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-primary">From the latest issue</div>
+                <div className="mini-story-list mt-4">
+                  {recent.slice(0, 2).map((story) => (
+                    <Link key={story.id} to="/blog/$slug" params={{ slug: story.slug }} className="mini-story-link">
+                      <div className="text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">
+                        {story.categories?.name ?? "Story"}
+                      </div>
+                      <div className="mt-2 font-display text-2xl leading-tight text-foreground">{story.title}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </section>
@@ -85,13 +96,13 @@ function HomePage() {
       {featured.length > 0 && (
         <section className="section-space pt-0">
           <div className="page-shell">
-            <div className="mb-8 flex items-end justify-between gap-4">
+            <div className="section-header">
               <div>
                 <span className="section-kicker">Editor&apos;s picks</span>
                 <h2 className="mt-3 font-display text-3xl md:text-4xl">Featured stories</h2>
               </div>
-              <Link to="/blog" className="text-sm font-medium text-primary hover:opacity-80">
-                All stories -&gt;
+              <Link to="/blog" className="section-link">
+                See the full archive
               </Link>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
@@ -105,13 +116,13 @@ function HomePage() {
 
       <section className="section-space pt-0">
         <div className="page-shell">
-          <div className="mb-8 flex items-end justify-between gap-4">
+          <div className="section-header">
             <div>
               <span className="section-kicker">Fresh from the desk</span>
               <h2 className="mt-3 font-display text-3xl md:text-4xl">Recent stories</h2>
             </div>
-            <Link to="/blog" className="text-sm font-medium text-primary hover:opacity-80">
-              Browse all -&gt;
+            <Link to="/blog" className="section-link">
+              Browse all
             </Link>
           </div>
           {recent.length > 0 ? (
@@ -133,7 +144,7 @@ function HomePage() {
 
       <section className="section-space pt-0">
         <div className="page-shell">
-          <div className="editorial-panel grid items-center gap-10 rounded-[2rem] px-6 py-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:px-12 md:py-14">
+          <div className="split-callout">
             <div>
               <span className="section-kicker">Join the publication</span>
               <h2 className="mt-3 font-display text-3xl text-balance md:text-5xl">

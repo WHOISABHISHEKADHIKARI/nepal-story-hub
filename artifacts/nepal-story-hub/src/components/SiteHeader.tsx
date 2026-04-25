@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, X, PenLine } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { Menu, X, PenLine, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { user, isAdmin, isContributor, signOut } = useAuth();
+  const location = useLocation();
+  const showBack = location.pathname !== "/";
 
   const navLinks = [
     { to: "/", label: "Home" },
@@ -16,30 +18,51 @@ export function SiteHeader() {
     { to: "/contact", label: "Contact" },
   ] as const;
 
+  const handleBack = () => {
+    setOpen(false);
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    window.location.href = "/";
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/88 backdrop-blur-xl">
       <div className="page-shell flex items-center justify-between gap-4 py-4">
-        <Link to="/" className="group flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/15 bg-primary/8 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-primary">
-            HK
-          </div>
-          <div className="min-w-0">
-            <span className="block font-display text-2xl font-semibold tracking-tight text-foreground">
-              Hamro<span className="text-primary">Katha</span>
-            </span>
-            <span className="hidden text-[0.68rem] uppercase tracking-[0.22em] text-muted-foreground sm:block">
-              Stories for curious travelers
-            </span>
-          </div>
-        </Link>
+        <div className="flex min-w-0 items-center gap-3">
+          {showBack && (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-white/50 text-foreground md:hidden"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+          )}
+          <Link to="/" className="group flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/15 bg-primary/8 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-primary">
+              HK
+            </div>
+            <div className="min-w-0">
+              <span className="block font-display text-[2rem] font-semibold tracking-tight text-foreground">
+                Hamro<span className="text-primary">Katha</span>
+              </span>
+              <span className="hidden text-[0.68rem] uppercase tracking-[0.22em] text-muted-foreground sm:block">
+                Stories from Nepal for curious readers
+              </span>
+            </div>
+          </Link>
+        </div>
 
         <nav className="hidden items-center gap-7 md:flex">
           {navLinks.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className="relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              activeProps={{ className: "!text-foreground after:absolute after:-bottom-2 after:left-0 after:h-px after:w-full after:bg-primary" }}
+              className="topbar-link"
+              activeProps={{ "data-active": "true" as any, className: "topbar-link" }}
               activeOptions={{ exact: l.to === "/" }}
             >
               {l.label}
@@ -80,7 +103,7 @@ export function SiteHeader() {
               <Link to="/login" search={{ redirect: "/dashboard/new" }}>
                 <Button size="sm" className="gap-1.5 rounded-full px-4 shadow-sm">
                   <PenLine className="h-3.5 w-3.5" />
-                  Start writing
+                  Write
                 </Button>
               </Link>
             </>

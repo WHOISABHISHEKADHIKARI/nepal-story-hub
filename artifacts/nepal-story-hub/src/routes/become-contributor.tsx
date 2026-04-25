@@ -26,6 +26,7 @@ export const Route = createFileRoute("/become-contributor")({
 
 function BecomeContributor() {
   const { user } = useAuth();
+  const [projectId, setProjectId] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
@@ -36,6 +37,15 @@ function BecomeContributor() {
     writing_samples: "",
   });
 
+  React.useEffect(() => {
+    void mcpApi.listCategories().then((res) => {
+      const activeProject = res.data?.[0]?.project;
+      if (typeof activeProject === "number") {
+        setProjectId(activeProject);
+      }
+    });
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = schema.safeParse(form);
@@ -43,10 +53,14 @@ function BecomeContributor() {
       toast.error(parsed.error.errors[0]?.message ?? "Invalid input");
       return;
     }
+    if (!projectId) {
+      toast.error("The publication project is not ready yet. Please try again shortly.");
+      return;
+    }
     setBusy(true);
     try {
       const res = await mcpApi.createAuthor({
-        project_id: 46,
+        project_id: projectId,
         name: parsed.data.full_name,
         bio: parsed.data.bio,
         description: parsed.data.motivation,
@@ -67,7 +81,7 @@ function BecomeContributor() {
   if (submitted) {
     return (
       <PublicLayout>
-        <div className="mx-auto max-w-lg px-5 py-24 text-center">
+        <div className="reading-shell section-space text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
           <h1 className="mt-4 font-display text-3xl">Thank you.</h1>
           <p className="mt-3 font-serif text-muted-foreground">
@@ -83,12 +97,12 @@ function BecomeContributor() {
     <PublicLayout>
       <div className="page-shell section-space max-w-4xl">
         <span className="section-kicker">Join us</span>
-        <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">Become a contributor</h1>
+        <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">Write for the publication</h1>
         <p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-muted-foreground">
-          Tell us who you are and what you&apos;d like to write. We respond to every application.
+          Pitch your voice, your reporting instincts, and the stories you can tell from where you stand. We read every application with care.
         </p>
 
-        <form onSubmit={handleSubmit} className="editorial-panel mt-10 space-y-5 rounded-[2rem] p-6 md:p-8">
+        <form onSubmit={handleSubmit} className="essay-panel mt-10 space-y-5">
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <Label htmlFor="name">Full name</Label>

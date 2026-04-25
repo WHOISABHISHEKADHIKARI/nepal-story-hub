@@ -30,11 +30,11 @@ function CategoriesIndex() {
 
   return (
     <PublicLayout>
-      <div className="mx-auto max-w-5xl px-5 py-16">
-        <span className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Sections</span>
-        <h1 className="font-display text-4xl md:text-5xl mt-2">Categories</h1>
-        <p className="mt-4 text-muted-foreground font-serif text-lg max-w-2xl">
-          Stories sorted by what they're really about.
+      <div className="page-shell section-space">
+        <span className="section-kicker">Sections</span>
+        <h1 className="mt-3 font-display text-4xl md:text-6xl">Browse the publication by subject.</h1>
+        <p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-muted-foreground">
+          Think of these as desks inside the publication: places, themes, beats, and recurring conversations.
         </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">
@@ -43,17 +43,19 @@ function CategoriesIndex() {
               key={c.id}
               to="/categories/$slug"
               params={{ slug: c.slug }}
-              className="group block p-6 bg-card border border-border/60 rounded-lg hover:border-primary/50 transition-colors"
+              className="category-tile group"
             >
               <div className="flex items-baseline justify-between">
-                <h2 className="font-display text-2xl group-hover:text-primary transition-colors">{c.name}</h2>
+                <h2 className="font-display text-3xl group-hover:text-primary transition-colors">{c.name}</h2>
                 <span className="text-xs text-muted-foreground">{c.count} {c.count === 1 ? "story" : "stories"}</span>
               </div>
-              {c.description && <p className="mt-2 text-sm text-muted-foreground font-serif">{c.description}</p>}
+              <p className="mt-3 font-serif text-base leading-7 text-muted-foreground">
+                {c.description ?? "A running shelf of stories from this desk."}
+              </p>
             </Link>
           ))}
           {cats.length === 0 && (
-            <div className="md:col-span-2 border border-dashed border-border rounded-lg p-12 text-center">
+            <div className="essay-panel md:col-span-2 text-center">
               <p className="text-muted-foreground font-serif italic">No categories yet. An admin can add them from the dashboard.</p>
             </div>
           )}

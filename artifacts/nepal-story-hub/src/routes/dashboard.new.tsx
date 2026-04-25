@@ -21,7 +21,8 @@ export const Route = createFileRoute("/dashboard/new")({
 function NewPost() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
-  const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
+  const [cats, setCats] = useState<{ id: string; name: string; project: number }[]>([]);
+  const [authors, setAuthors] = useState<{ id: number; name: string; project?: number }[]>([]);
   const [form, setForm] = useState({
     title: "",
     excerpt: "",
@@ -37,7 +38,27 @@ function NewPost() {
   useEffect(() => {
     void mcpApi.listCategories().then((res) => {
       const data = res.data || [];
-      setCats(data.map((c) => ({ id: String(c.id), name: c.name })));
+      const mapped = data.map((c) => ({
+        id: String(c.id),
+        name: c.name,
+        project: c.project,
+      }));
+      setCats(mapped);
+      setForm((current) => ({
+        ...current,
+        category_id: current.category_id || mapped[0]?.id || "",
+      }));
+    });
+
+    void mcpApi.listAuthors().then((res) => {
+      const data = res.data || [];
+      setAuthors(
+        data.map((author) => ({
+          id: author.id,
+          name: author.name,
+          project: (author as any).project,
+        })),
+      );
     });
   }, []);
 
@@ -46,16 +67,34 @@ function NewPost() {
       toast.error("Title and content are required.");
       return;
     }
+    if (!form.category_id) {
+      toast.error("Select a category before saving.");
+      return;
+    }
+
+    const selectedCategory = cats.find((cat) => cat.id === form.category_id);
+    const activeAuthor = authors[0];
+
+    if (!selectedCategory) {
+      toast.error("The selected category is no longer available.");
+      return;
+    }
+
+    if (!activeAuthor) {
+      toast.error("No author exists in the CMS yet. Create an author first.");
+      return;
+    }
+
     setBusy(true);
     try {
       const res = await mcpApi.createPost({
-        project_id: 46,
+        project_id: selectedCategory.project,
         title: form.title.trim(),
         description: form.excerpt,
         content: form.content,
-        category_id: parseInt(form.category_id) || 46,
-        author_id: 41,
-        status: status === "published" ? "published" : "draft",
+        category_id: parseInt(form.category_id, 10),
+        author_id: activeAuthor.id,
+        status: status,
         meta_title: form.meta_title,
         meta_description: form.meta_description,
       });
@@ -140,6 +179,14 @@ function NewPost() {
                 <option value="">Select a category</option>
                 {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
+            </div>
+            <div className="workspace-note">
+              <div className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-primary">Publish target</div>
+              <p className="mt-3 text-sm leading-7">
+                {authors[0]
+                  ? `Stories will be created under ${authors[0].name} in project ${cats.find((cat) => cat.id === form.category_id)?.project ?? "..."}.`
+                  : "Add an author in the CMS first, then return here to publish."}
+              </p>
             </div>
             <div>
               <Label>Tags</Label>

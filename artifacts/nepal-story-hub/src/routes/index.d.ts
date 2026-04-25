@@ -1,1 +1,0 @@
-export declare const Route: Route<TRegister, TParentRoute, TPath, TFullPath, TFilePath, TId, TSearchValidator, TParams, AnyContext, TRouteContextFn, TBeforeLoadFn, TLoaderDeps, TLoaderFn, TChildren, unknown, TSSR, TMiddlewares, THandlers>;

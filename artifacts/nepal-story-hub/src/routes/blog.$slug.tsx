@@ -38,8 +38,12 @@ export const Route = createFileRoute("/blog/$slug")({
         meta_title: null,
         meta_description: null,
         tags: [],
-        categories: { name: p.category.name, slug: p.category.slug },
-        profiles: { display_name: p.author.name, bio: null, avatar_url: null },
+        categories: p.category_details
+          ? { name: p.category_details.name, slug: p.category_details.slug }
+          : null,
+        profiles: p.author_details
+          ? { display_name: p.author_details.name, bio: p.author_details.bio ?? null, avatar_url: p.author_details.profile_picture ?? null }
+          : null,
       };
 
       return { post: mappedPost };

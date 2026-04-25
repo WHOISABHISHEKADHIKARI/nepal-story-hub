@@ -65,19 +65,27 @@ function CategoryPage() {
 
   return (
     <PublicLayout>
-      <div className="mx-auto max-w-6xl px-5 py-12">
+      <div className="page-shell section-space">
         <Link to="/categories" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-3.5 w-3.5" /> All categories
         </Link>
-        <span className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">Section</span>
-        <h1 className="font-display text-4xl md:text-5xl mt-2">{category.name}</h1>
-        {category.description && <p className="mt-3 text-muted-foreground font-serif text-lg max-w-2xl">{category.description}</p>}
+        <span className="section-kicker">Section</span>
+        <h1 className="mt-3 font-display text-4xl md:text-6xl">{category.name}</h1>
+        <p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-muted-foreground">
+          Stories gathered under this desk, read together rather than one by one.
+        </p>
 
         <div className="mt-12">
-          {posts.length === 0 ? (
-            <p className="text-muted-foreground italic font-serif">No stories in this section yet.</p>
+          {loading ? (
+            <div className="essay-panel text-center">
+              <p className="font-serif italic text-muted-foreground">Loading stories...</p>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="essay-panel text-center">
+              <p className="text-muted-foreground italic font-serif">No stories in this section yet.</p>
+            </div>
           ) : (
-            <div className="grid gap-12 md:grid-cols-2">
+            <div className="grid gap-7 md:grid-cols-2">
               {posts.map((p) => <PostCard key={p.id} post={p} />)}
             </div>
           )}

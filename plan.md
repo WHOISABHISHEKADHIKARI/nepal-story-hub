@@ -1,41 +1,25 @@
-# Implementation Plan: Nepal Story Hub - MCP Integration
+# Redesign Execution Plan
 
-This document tracks the progress of connecting the Nepal Story Hub application to the external BlogAPIService via Model Context Protocol (MCP).
+## Goal
 
-## Current Status
-- [x] Initial discovery of BlogAPIService MCP server.
-- [x] Creation of `mcp-settings.json` for local environment.
-- [x] Implementation of `MCPClient` in `api-server` backend.
-- [x] Exposure of MCP tools (Posts, Categories) via Express REST endpoints in `api-server`.
-- [x] Configuration of Vite proxy to route `/api` calls to the `api-server`.
-- [x] Partial migration of Frontend routes to use the new `mcpApi` client instead of Supabase:
-    - [x] `blog.tsx` (Index)
-    - [x] `index.tsx` (Home)
-    - [x] `blog.$slug.tsx` (Post detail)
-    - [x] `categories.tsx` (Categories list)
-    - [x] `admin.posts.tsx` (Admin posts list)
-    - [x] `admin.categories.tsx` (Admin categories list)
-    - [x] `admin.index.tsx` (Admin dashboard stats)
-    - [x] `admin.contributors.tsx` (Author management)
-    - [x] `admin.review.tsx` (Post approval queue)
-    - [x] `dashboard.new.tsx` (Create post)
-    - [x] `dashboard.edit.$id.tsx` (Edit post)
-    - [x] `become-contributor.tsx` (New author registration)
+Turn the public-facing product into a coherent editorial publication with a Medium-like reading experience, while keeping the auth/CMS architecture honest and the contributor workflow functional.
 
-## Completed Tasks
-- [x] Initial discovery of BlogAPIService MCP server.
-- [x] Creation of `mcp-settings.json` for local environment.
-- [x] Implementation of `MCPClient` in `api-server` backend.
-- [x] Exposure of MCP tools (Posts, Categories, Authors) via Express REST endpoints in `api-server`.
-- [x] Configuration of Vite proxy to route `/api` calls to the `api-server`.
-- [x] Migration of all data-fetching Frontend routes to use the new `mcpApi` client.
+## Steps
 
-## Future Considerations
-- [ ] Implement Author login/auth mapping to MCP authors.
-- [ ] Final verification of all data flows.
-- [ ] Cleanup of unused Supabase tables (keeping Auth for now).
+- [x] 1. Audit the current architecture
+  Review public routes, shared layout, auth surfaces, CMS integration points, and editor/dashboard flows to identify design and data-shape mismatches.
 
-## Technical Details
-- **Backend Proxy**: `artifacts/api-server/src/lib/mcp.ts` handles JSON-RPC communication over HTTP/SSE with the MCP server.
-- **Frontend Client**: `artifacts/nepal-story-hub/src/lib/api-mcp.ts` provides a clean interface for the frontend to call the backend proxy.
-- **Data Mapping**: MCP data structures (e.g., `MCPPost`) are mapped to the existing application types (e.g., `PostListItem`) to minimize UI changes.
+- [x] 2. Tighten the publication design system
+  Create stronger shared editorial primitives in the global stylesheet so the public app uses one visual language instead of page-by-page styling.
+
+- [x] 3. Rebuild the shared shell
+  Redesign the public header, footer, layout wrapper, and story card components so every page inherits the same publication structure.
+
+- [x] 4. Redesign the key public pages
+  Refit home, about, contact, categories, category detail, contributor application, and article detail screens to the new editorial system.
+
+- [x] 5. Fix architectural mismatches discovered during the audit
+  Remove broken assumptions in data mapping and editor submission flows so CMS-backed pages and creation flows use real MCP data instead of incorrect hardcoded values.
+
+- [ ] 6. Verify and polish
+  Run typecheck, inspect the redesigned routes in the browser, and do a final pass on any issues revealed by live screenshots.

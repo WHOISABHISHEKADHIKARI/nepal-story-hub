@@ -9,6 +9,16 @@ export interface MCPPost {
   content: string;
   category: { id: number; name: string; slug: string };
   author: { id: number; name: string; slug: string };
+  category_details?: { id: number; name: string; slug: string; project?: number };
+  author_details?: {
+    id: number;
+    name: string;
+    slug: string;
+    bio?: string | null;
+    description?: string | null;
+    profile_picture?: string | null;
+    project?: number;
+  };
   status: string;
   created_at: string;
   published_at: string | null;

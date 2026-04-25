@@ -8,11 +8,11 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   return (
     <PublicLayout>
-      <div className="page-shell section-space max-w-4xl">
-        <div className="editorial-panel rounded-[2rem] px-6 py-10 md:px-10 md:py-12">
+      <div className="reading-shell section-space">
+        <div className="essay-panel">
           <span className="section-kicker">About us</span>
           <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">
-            A publication that believes Nepal&apos;s story belongs first to Nepalis.
+            We publish Nepal like it deserves to be read: closely, patiently, and without performance.
           </h1>
           <div className="prose-editorial mt-8 max-w-none">
             <p>
